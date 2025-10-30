@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('completed_datetime')->nullable();
             $table->unsignedBigInteger('group_id')->nullable();
             $table->dateTimeTz('created_at')->useCurrent()->index('idx_created_at');
-            $table->dateTimeTz('updated_at')->useCurrentOnUpdate()->index('idx_updated_at');
+            $table->dateTimeTz('updated_at')->useCurrent()->useCurrentOnUpdate()->index('idx_updated_at');
             $table->dateTimeTz('deleted_at')->nullable()->index('idx_deleted_at');
 
             // 비즈니스 로직 인덱스

@@ -71,7 +71,7 @@ $table->index(['user_id', 'status'], 'idx_user_id_02');
 
 ```php
 $table->dateTimeTz('created_at')->useCurrent()->index('idx_created_at');
-$table->dateTimeTz('updated_at')->useCurrentOnUpdate()->index('idx_updated_at');
+$table->dateTimeTz('updated_at')->useCurrent()->useCurrentOnUpdate()->index('idx_updated_at');
 $table->dateTimeTz('deleted_at')->nullable()->index('idx_deleted_at');
 ```
 
@@ -111,7 +111,7 @@ return new class extends Migration
 
             // 타임스탬프 컬럼 (timezone 지원 + 자동 관리 + 인덱스)
             $table->dateTimeTz('created_at')->useCurrent()->index('idx_created_at');
-            $table->dateTimeTz('updated_at')->useCurrentOnUpdate()->index('idx_updated_at');
+            $table->dateTimeTz('updated_at')->useCurrent()->useCurrentOnUpdate()->index('idx_updated_at');
             $table->dateTimeTz('deleted_at')->nullable()->index('idx_deleted_at');
 
             // 비즈니스 로직 인덱스
