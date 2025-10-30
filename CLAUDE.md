@@ -265,6 +265,8 @@ Laravel 12.0의 기본 헬스체크 엔드포인트 `/up`이 자동으로 등록
 - TaskList 목록 조회
 - 기존 "Group" 개념을 "TaskList"로 명확화
 
+**상태**: 🚧 **부분 구현 완료** (Domain Layer 완료, Application/Infrastructure Layer 진행 중)
+
 ### MVP 이후 기능 (추후 논의 및 구현)
 
 #### Phase 2: SubTask 및 할 일 고급 기능
@@ -349,22 +351,49 @@ Laravel 12.0의 기본 헬스체크 엔드포인트 `/up`이 자동으로 등록
 
 ### Feature 4: TaskList 기본 관리
 **목표**: TaskList CRUD 및 할 일 연결 관리 (기존 Group을 TaskList로 확장)
+**상태**: 🚧 **진행 중** (50% 완료)
 
-- [ ] TaskList Aggregate Root 설계
-- [ ] TaskList Repository 구현 (Eloquent)
-- [ ] CreateTaskList UseCase
+**Domain Layer (완료):**
+- [x] TaskList Entity 설계 (src/Domain/TaskList/Entities/TaskList.php)
+- [x] TaskList Value Objects (TaskListName, TaskListDescription)
+- [x] TaskList Exceptions (InvalidTaskListNameException, TaskListNameTooLongException)
+- [x] TaskListRepositoryInterface (src/Domain/TaskList/Repositories/TaskListRepositoryInterface.php)
+- [x] Task Entity의 GroupId → TaskListId 마이그레이션
+
+**Infrastructure Layer (완료):**
+- [x] EloquentTaskListRepository 구현 (src/Infrastructure/TaskList/Repositories/EloquentTaskListRepository.php)
+- [x] TaskList Eloquent Model (app/Models/TaskList.php)
+- [x] create_task_lists_table Migration (database/migrations/2025_10_30_000002_create_task_lists_table.php)
+- [x] Task 테이블의 group_id → task_list_id 마이그레이션
+- [x] Service Provider 바인딩 완료
+
+**Application Layer (부분 완료):**
+- [x] CreateTaskList UseCase
+- [x] CreateTaskListDTO
+- [x] TaskListDTO
 - [ ] UpdateTaskList UseCase
 - [ ] DeleteTaskList UseCase
 - [ ] AddTaskToTaskList UseCase
 - [ ] RemoveTaskFromTaskList UseCase
 - [ ] GetTaskListTasks UseCase
-- [ ] TaskList Domain Events 구현
+
+**Presentation Layer (미착수):**
 - [ ] TaskList 목록/상세 Blade 컴포넌트
 - [ ] TaskList 관리 UI
+- [ ] TaskList CRUD API 엔드포인트
 
-**예상 작업 기간**: 7-10일
+**테스트 (미착수):**
+- [ ] TaskList Domain Layer 테스트
+- [ ] TaskList Application Layer 테스트
+- [ ] TaskList Infrastructure Layer 테스트
+- [ ] TaskList 통합 테스트
 
-**참고**: 기존 Group 구조를 TaskList로 명확화하는 확장 작업입니다.
+**예상 작업 기간**: 7-10일 (50% 진행)
+
+**참고**:
+- 기존 Group 구조를 TaskList로 명확화하는 확장 작업입니다.
+- Domain Layer와 Infrastructure Layer의 기본 구조는 완료되었습니다.
+- Application Layer의 나머지 UseCase와 테스트 코드 작성이 필요합니다.
 
 ### Feature 5: 프론트엔드 통합 및 UX
 **목표**: 사용자 경험 최적화 및 반응형 디자인
@@ -378,6 +407,41 @@ Laravel 12.0의 기본 헬스체크 엔드포인트 `/up`이 자동으로 등록
 - [ ] 토스트 알림 컴포넌트
 
 **예상 작업 기간**: 5-7일
+
+## 최근 구현 내역 (2025-10-30)
+
+### TaskList 도메인 구현 (Feature 4 - 50% 완료)
+
+**주요 변경사항:**
+1. **Group → TaskList 명확화**
+   - 기존 Group 개념을 TaskList로 명확하게 재정의
+   - Task 엔티티의 `groupId` → `taskListId` 마이그레이션
+   - 데이터베이스 스키마: `groups` 테이블 → `task_lists` 테이블
+
+2. **Domain Layer 완성**
+   - TaskList Entity (Aggregate Root)
+   - Value Objects: TaskListName, TaskListDescription
+   - Exceptions: InvalidTaskListNameException, TaskListNameTooLongException
+   - Repository Interface: TaskListRepositoryInterface
+
+3. **Infrastructure Layer 완성**
+   - EloquentTaskListRepository 구현
+   - TaskList Eloquent Model with SoftDeletes
+   - Migration 파일 생성 (외래키 규칙 준수)
+
+4. **Application Layer 부분 완성**
+   - CreateTaskList UseCase
+   - CreateTaskListDTO, TaskListDTO
+
+5. **외래키 규칙 전면 적용**
+   - `foreign()` 제약조건 사용 금지 정책 확립
+   - 모든 외래키 컬럼에 `comment('{table_name}.{key}')` 추가
+   - 인덱스 네이밍 규칙 통일: `idx_{column_name}`
+
+**다음 단계:**
+- TaskList UseCase 나머지 구현 (Update, Delete, AddTask, RemoveTask, GetTasks)
+- TaskList 도메인 테스트 작성 (Unit, Integration)
+- Task 도메인 테스트 수정 (groupId → taskListId)
 
 ## 개발 시 참고사항
 

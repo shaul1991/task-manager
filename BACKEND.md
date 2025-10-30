@@ -254,6 +254,7 @@ Domain Events:
 #### 2. Task Context (할 일 컨텍스트)
 **책임**: 할 일의 생명주기 관리 (생성, 수정, 완료, 삭제)
 **상태**: ✅ **완전 구현 완료** (Domain, Application, Infrastructure Layers)
+**최근 업데이트**: TaskList 연동을 위한 GroupId → TaskListId 마이그레이션 완료 (2025-10-30)
 
 **Domain Layer (완료):**
 ```
@@ -340,28 +341,70 @@ Integration Tests:
 
 #### 3. TaskList Context (할 일 목록 컨텍스트)
 **책임**: TaskList 관리 및 할 일 컨테이너 역할 (기존 Group을 TaskList로 명확화)
+**상태**: 🚧 **부분 구현 완료** (Domain, Infrastructure 완료 / Application 진행 중)
+**최근 업데이트**: Domain 및 Infrastructure Layer 완성 (2025-10-30)
 
-**도메인 모델:**
+**Domain Layer (완료):**
 ```
 Aggregate Root:
-- TaskList (할 일 컬렉션 포함)
+- TaskList (src/Domain/TaskList/Entities/TaskList.php)
 
 Value Objects:
-- TaskListName
-- TaskListDescription
-
-Domain Services:
-- TaskListTaskService (TaskList-할 일 연결 관리)
+- TaskListName (src/Domain/TaskList/ValueObjects/TaskListName.php)
+- TaskListDescription (src/Domain/TaskList/ValueObjects/TaskListDescription.php)
 
 Repository Interfaces:
-- TaskListRepositoryInterface
+- TaskListRepositoryInterface (src/Domain/TaskList/Repositories/TaskListRepositoryInterface.php)
 
-Domain Events:
-- TaskListCreated
-- TaskListUpdated
-- TaskListDeleted
-- TaskAddedToTaskList
-- TaskRemovedFromTaskList
+Exceptions:
+- InvalidTaskListNameException (src/Domain/TaskList/Exceptions/InvalidTaskListNameException.php)
+- TaskListNameTooLongException (src/Domain/TaskList/Exceptions/TaskListNameTooLongException.php)
+
+비즈니스 규칙:
+- TaskList 이름은 1-100자 사이여야 함
+- TaskList는 User에 속할 수 있음 (게스트는 user_id NULL)
+- SoftDelete 적용
+```
+
+**Infrastructure Layer (완료):**
+```
+Repository Implementations:
+- EloquentTaskListRepository (src/Infrastructure/TaskList/Repositories/EloquentTaskListRepository.php)
+
+Eloquent Models:
+- TaskList (app/Models/TaskList.php)
+
+Database Migrations:
+- 2025_10_30_000002_create_task_lists_table.php
+
+Service Provider Bindings:
+- DomainServiceProvider (app/Providers/DomainServiceProvider.php)
+  → TaskListRepositoryInterface → EloquentTaskListRepository
+```
+
+**Application Layer (부분 완료):**
+```
+Use Cases (완료):
+- CreateTaskList (src/Application/TaskList/UseCases/CreateTaskList.php)
+
+DTOs (완료):
+- TaskListDTO (src/Application/TaskList/DTOs/TaskListDTO.php)
+- CreateTaskListDTO (src/Application/TaskList/DTOs/CreateTaskListDTO.php)
+
+Use Cases (미구현):
+- UpdateTaskList
+- DeleteTaskList
+- AddTaskToTaskList
+- RemoveTaskFromTaskList
+- GetTaskListTasks
+```
+
+**테스트 커버리지 (미착수):**
+```
+- TaskList Domain Layer 테스트 필요
+- TaskList Application Layer 테스트 필요
+- TaskList Infrastructure Layer 테스트 필요
+- TaskList 통합 테스트 필요
 ```
 
 **Phase 2 확장 계획:**
@@ -414,90 +457,110 @@ TaskGroup Context (카테고리 컨텍스트):
 
 ## 데이터베이스 스키마
 
+### 최근 변경사항 (2025-10-30)
+
+**Group → TaskList 마이그레이션:**
+- `groups` 테이블 → `task_lists` 테이블로 명확화
+- `tasks.group_id` → `tasks.task_list_id` 컬럼명 변경
+- 모든 외래키 컬럼에 `comment('{table_name}.{key}')` 추가
+- SoftDelete 및 인덱스 네이밍 규칙 전면 적용
+
 ### MVP 스키마 설계
 
 ```sql
--- 사용자 테이블
+-- 사용자 테이블 (예정)
 CREATE TABLE users (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    INDEX idx_users_email (email)
+    created_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    deleted_at TIMESTAMP(6) NULL,
+    INDEX idx_created_at (created_at),
+    INDEX idx_updated_at (updated_at),
+    INDEX idx_deleted_at (deleted_at),
+    INDEX idx_email (email)
 );
 
--- 할 일 테이블
+-- TaskList 테이블 (기존 groups 테이블 → task_lists로 명확화) ✅ 구현 완료
+CREATE TABLE task_lists (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    user_id BIGINT UNSIGNED NULL COMMENT 'users.id (게스트는 NULL)',
+    created_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    deleted_at TIMESTAMP(6) NULL,
+    INDEX idx_created_at (created_at),
+    INDEX idx_updated_at (updated_at),
+    INDEX idx_deleted_at (deleted_at),
+    INDEX idx_user_id (user_id)
+) COMMENT 'TaskList (할 일 목록)';
+
+-- 할 일 테이블 ✅ 구현 완료
 CREATE TABLE tasks (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT UNSIGNED NULL COMMENT '게스트는 NULL',
-    task_list_id BIGINT UNSIGNED NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT NULL,
     completed_datetime TIMESTAMP NULL COMMENT '완료 처리 시간 (NULL이면 미완료)',
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-
-    INDEX idx_tasks_user_id (user_id),
-    INDEX idx_tasks_task_list_id (task_list_id),
-    INDEX idx_tasks_completed (completed_datetime),
-
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (task_list_id) REFERENCES task_lists(id) ON DELETE SET NULL
-);
-
--- TaskList 테이블 (기존 groups 테이블)
-CREATE TABLE task_lists (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT UNSIGNED NULL COMMENT '게스트는 NULL',
-    name VARCHAR(255) NOT NULL,
-    description TEXT NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-
-    INDEX idx_task_lists_user_id (user_id),
-
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+    task_list_id BIGINT UNSIGNED NULL COMMENT 'task_lists.id',
+    created_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    deleted_at TIMESTAMP(6) NULL,
+    INDEX idx_created_at (created_at),
+    INDEX idx_updated_at (updated_at),
+    INDEX idx_deleted_at (deleted_at),
+    INDEX idx_task_list_id (task_list_id),
+    INDEX idx_completed_datetime (completed_datetime)
+) COMMENT 'Task (할 일)';
 
 -- Phase 2: SubTask 테이블 (향후 구현)
 /*
 CREATE TABLE sub_tasks (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    task_id BIGINT UNSIGNED NOT NULL,
+    task_id BIGINT UNSIGNED NOT NULL COMMENT 'tasks.id',
     title VARCHAR(255) NOT NULL,
     is_completed BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-
-    INDEX idx_sub_tasks_task_id (task_id),
-
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
-);
+    created_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    deleted_at TIMESTAMP(6) NULL,
+    INDEX idx_created_at (created_at),
+    INDEX idx_updated_at (updated_at),
+    INDEX idx_deleted_at (deleted_at),
+    INDEX idx_task_id (task_id)
+) COMMENT 'SubTask (할 일 내부 체크리스트)';
 */
 
 -- Phase 3: TaskGroup 테이블 (향후 구현)
 /*
 CREATE TABLE task_groups (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT UNSIGNED NULL,
+    user_id BIGINT UNSIGNED NULL COMMENT 'users.id (게스트는 NULL)',
     name VARCHAR(255) NOT NULL,
     description TEXT NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
+    created_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    deleted_at TIMESTAMP(6) NULL,
+    INDEX idx_created_at (created_at),
+    INDEX idx_updated_at (updated_at),
+    INDEX idx_deleted_at (deleted_at),
+    INDEX idx_user_id (user_id)
+) COMMENT 'TaskGroup (TaskList를 묶는 상위 카테고리)';
 
-    INDEX idx_task_groups_user_id (user_id),
-
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- TaskList에 task_group_id 컬럼 추가
-ALTER TABLE task_lists ADD COLUMN task_group_id BIGINT UNSIGNED NULL;
-ALTER TABLE task_lists ADD INDEX idx_task_lists_task_group_id (task_group_id);
-ALTER TABLE task_lists ADD FOREIGN KEY (task_group_id) REFERENCES task_groups(id) ON DELETE SET NULL;
+-- TaskList에 task_group_id 컬럼 추가 (Phase 3)
+ALTER TABLE task_lists ADD COLUMN task_group_id BIGINT UNSIGNED NULL COMMENT 'task_groups.id';
+ALTER TABLE task_lists ADD INDEX idx_task_group_id (task_group_id);
 */
 ```
+
+**주요 특징:**
+- ✅ **외래키 제약조건 미사용**: `FOREIGN KEY` 제약 없이 애플리케이션 레벨에서 참조 무결성 관리
+- ✅ **Comment 규칙 준수**: 모든 외래키 컬럼에 `comment('{table_name}.{key}')` 추가
+- ✅ **SoftDelete 적용**: 모든 테이블에 `deleted_at` 컬럼 및 인덱스 설정
+- ✅ **Timezone 지원**: `TIMESTAMP(6)` 사용 (마이크로초 정밀도)
+- ✅ **인덱스 네이밍 규칙**: `idx_{column_name}` 형식 통일
+- ✅ **자동 타임스탬프**: `DEFAULT CURRENT_TIMESTAMP(6)` 및 `ON UPDATE CURRENT_TIMESTAMP(6)`
 
 ## DDD 디렉토리 구조
 
