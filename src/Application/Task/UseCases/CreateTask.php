@@ -37,7 +37,7 @@ final readonly class CreateTask
         $task = Task::create(
             title: new TaskTitle($dto->title),
             description: new TaskDescription($dto->description),
-            groupId: $dto->groupId
+            taskListId: $dto->taskListId
         );
 
         // Repository를 통해 저장

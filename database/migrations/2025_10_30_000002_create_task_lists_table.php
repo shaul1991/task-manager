@@ -11,19 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tasks', function (Blueprint $table) {
+        Schema::create('task_lists', function (Blueprint $table) {
             $table->id();
-            $table->string('title', 255);
+            $table->string('name', 255);
             $table->text('description')->nullable();
-            $table->timestamp('completed_datetime')->nullable();
-            $table->unsignedBigInteger('task_list_id')->nullable()->comment('task_lists.id');
+            $table->unsignedBigInteger('user_id')->nullable()->comment('users.id (게스트는 NULL)');
             $table->dateTimeTz('created_at')->useCurrent()->index('idx_created_at');
             $table->dateTimeTz('updated_at')->useCurrent()->useCurrentOnUpdate()->index('idx_updated_at');
             $table->dateTimeTz('deleted_at')->nullable()->index('idx_deleted_at');
 
             // 비즈니스 로직 인덱스
-            $table->index('task_list_id', 'idx_task_list_id');
-            $table->index('completed_datetime', 'idx_completed_datetime');
+            $table->index('user_id', 'idx_user_id');
         });
     }
 
@@ -32,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tasks');
+        Schema::dropIfExists('task_lists');
     }
 };

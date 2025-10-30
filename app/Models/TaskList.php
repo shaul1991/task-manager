@@ -8,12 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * Task Eloquent Model
+ * TaskList Eloquent Model
  *
  * Infrastructure 레이어에서 사용하는 Eloquent 모델
  * Domain Entity와 별개로 데이터베이스 영속성을 담당
  */
-class Task extends Model
+class TaskList extends Model
 {
     use SoftDeletes;
 
@@ -22,7 +22,7 @@ class Task extends Model
      *
      * @var string
      */
-    protected $table = 'tasks';
+    protected $table = 'task_lists';
 
     /**
      * The attributes that are mass assignable.
@@ -30,10 +30,9 @@ class Task extends Model
      * @var array<string>
      */
     protected $fillable = [
-        'title',
+        'name',
         'description',
-        'completed_datetime',
-        'task_list_id',
+        'user_id',
     ];
 
     /**
@@ -42,7 +41,6 @@ class Task extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'completed_datetime' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

@@ -7,6 +7,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Src\Domain\Task\Repositories\TaskRepositoryInterface;
 use Src\Infrastructure\Task\Repositories\EloquentTaskRepository;
+use Src\Domain\TaskList\Repositories\TaskListRepositoryInterface;
+use Src\Infrastructure\TaskList\Repositories\EloquentTaskListRepository;
 
 /**
  * Domain Service Provider
@@ -26,7 +28,13 @@ class DomainServiceProvider extends ServiceProvider
             EloquentTaskRepository::class
         );
 
-        // 향후 User, Group Repository 바인딩 추가 예정
+        // TaskList Repository 바인딩
+        $this->app->bind(
+            TaskListRepositoryInterface::class,
+            EloquentTaskListRepository::class
+        );
+
+        // 향후 User Repository 바인딩 추가 예정
     }
 
     /**

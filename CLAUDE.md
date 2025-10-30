@@ -19,20 +19,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **핵심 개념:**
 - **Task (할 일)**: 개별적인 할 일 항목 (예: "우유 사기", "운동하기")
-- **Group (그룹)**: 관련된 할 일들을 묶는 컨테이너 (예: "쇼핑 목록", "운동 루틴")
+- **TaskList (할 일 목록)**: 관련된 할 일들을 묶는 컨테이너 (예: "쇼핑 목록", "운동 루틴")
+  - 기존 Group 개념을 TaskList로 명확화
+  - task(n) : task_list(1) 관계
+
+**계층 구조 로드맵 (최종):**
+```
+SubTask (하위 작업) ← Task (할 일) ← TaskList (목록) ← TaskGroup (카테고리)
+```
+
+**현재 MVP 구현:**
+```
+Task (할 일) ← TaskList (목록)
+```
+- SubTask: Phase 2에서 구현 예정 (Task 내부의 체크리스트)
+- TaskGroup: Phase 3에서 구현 예정 (TaskList들을 묶는 상위 카테고리)
 
 ## 전문 문서 참조
 
 개발 영역에 따라 다음 전문 문서를 참조하세요:
 
-- **백엔드 개발**: @BACKEND.md
+- **백엔드 개발**: [@BACKEND.md](./BACKEND.md)
   - Laravel 개발 규칙 (Model, Migration)
   - DDD 아키텍처 설계
   - 데이터베이스 스키마
   - Repository 패턴
   - 백엔드 테스트 작성 규칙
 
-- **프론트엔드 개발**: @FRONTEND.md
+- **프론트엔드 개발**: [@FRONTEND.md](./FRONTEND.md)
   - Tailwind CSS 4.0 설정
   - Blade Components 작성 규칙
   - LocalStorage 관리 (게스트 모드)
@@ -244,39 +258,48 @@ Laravel 12.0의 기본 헬스체크 엔드포인트 `/up`이 자동으로 등록
 
 **상태**: ✅ **완전 구현 완료** (Domain, Application, Infrastructure Layers)
 
-#### 4. 그룹(Group) 기본 관리
-- 그룹 생성/수정/삭제
-- 그룹에 할 일 추가/제거
-- 그룹별 할 일 조회
-- 그룹 목록 조회
+#### 4. TaskList(할 일 목록) 기본 관리
+- TaskList 생성/수정/삭제
+- TaskList에 할 일 추가/제거
+- TaskList별 할 일 조회
+- TaskList 목록 조회
+- 기존 "Group" 개념을 "TaskList"로 명확화
 
 ### MVP 이후 기능 (추후 논의 및 구현)
 
-#### Phase 2: 할 일 고급 기능
+#### Phase 2: SubTask 및 할 일 고급 기능
+- **SubTask (하위 작업) 구현**
+  - Task 내부의 체크리스트 형태
+  - sub_task(n) : task(1) 관계
+  - SubTask는 독립적으로 존재 불가
+  - Task 생성 후 SubTask 추가 가능
 - 우선순위 설정 (높음/보통/낮음)
 - 반복 일정 (매일, 매주, 매월)
 - 할 일 첨부파일 지원
-- 체크리스트 (서브태스크)
 - 할 일 순서 변경 (드래그 앤 드롭)
 
-#### Phase 3: 그룹 고급 기능
-- 그룹 색상/아이콘 커스터마이징
-- 그룹 정렬/순서 변경
-- 그룹 즐겨찾기
-- 그룹 아카이브
-- 그룹 템플릿
+#### Phase 3: TaskGroup 및 TaskList 고급 기능
+- **TaskGroup (상위 카테고리) 구현**
+  - TaskList들을 묶는 최상위 계층
+  - task_list(n) : task_group(1) 관계
+  - 카테고리 역할 (예: 회사, 개인, 프로젝트)
+- TaskList 색상/아이콘 커스터마이징
+- TaskList 정렬/순서 변경
+- TaskList 즐겨찾기
+- TaskList 아카이브
+- TaskList 템플릿
 
 #### Phase 4: 공유 및 협업
-- 그룹을 다른 사용자와 공유
-- 공유 그룹 멤버 관리
-- 그룹 멤버별 권한 설정 (소유자/멤버)
+- TaskList를 다른 사용자와 공유
+- 공유 TaskList 멤버 관리
+- TaskList 멤버별 권한 설정 (소유자/멤버)
 - 할 일 담당자 할당
 - 활동 로그 및 댓글 기능
 
 #### Phase 5: 추가 편의 기능
 - 태그 시스템
-- 전체 검색 (할 일, 그룹)
-- 알림 기능 (마감일 임박, 공유 그룹 변경)
+- 전체 검색 (할 일, TaskList, TaskGroup)
+- 알림 기능 (마감일 임박, 공유 TaskList 변경)
 - 통계 및 대시보드 (완료율, 생산성 차트)
 - 캘린더 뷰
 - 모바일 앱 지원
@@ -287,7 +310,7 @@ Laravel 12.0의 기본 헬스체크 엔드포인트 `/up`이 자동으로 등록
 **목표**: 로그인 없이 LocalStorage 기반으로 할 일 관리 가능
 
 - [ ] LocalStorage 기반 Task CRUD 구현
-- [ ] LocalStorage 기반 Group CRUD 구현
+- [ ] LocalStorage 기반 TaskList CRUD 구현
 - [ ] 게스트 세션 관리 로직
 - [ ] 회원 가입 유도 UI 컴포넌트
 - [ ] 게스트 데이터 마이그레이션 API
@@ -324,22 +347,24 @@ Laravel 12.0의 기본 헬스체크 엔드포인트 `/up`이 자동으로 등록
 **백엔드 작업 기간**: 완료 (95개 테스트 통과)
 **프론트엔드 작업 기간**: 5-7일 (예정)
 
-### Feature 4: 그룹 기본 관리
-**목표**: 그룹 CRUD 및 할 일 연결 관리
+### Feature 4: TaskList 기본 관리
+**목표**: TaskList CRUD 및 할 일 연결 관리 (기존 Group을 TaskList로 확장)
 
-- [ ] Group Aggregate Root 설계
-- [ ] Group Repository 구현 (Eloquent)
-- [ ] CreateGroup UseCase
-- [ ] UpdateGroup UseCase
-- [ ] DeleteGroup UseCase
-- [ ] AddTaskToGroup UseCase
-- [ ] RemoveTaskFromGroup UseCase
-- [ ] GetGroupTasks UseCase
-- [ ] Group Domain Events 구현
-- [ ] 그룹 목록/상세 Blade 컴포넌트
-- [ ] 그룹 관리 UI
+- [ ] TaskList Aggregate Root 설계
+- [ ] TaskList Repository 구현 (Eloquent)
+- [ ] CreateTaskList UseCase
+- [ ] UpdateTaskList UseCase
+- [ ] DeleteTaskList UseCase
+- [ ] AddTaskToTaskList UseCase
+- [ ] RemoveTaskFromTaskList UseCase
+- [ ] GetTaskListTasks UseCase
+- [ ] TaskList Domain Events 구현
+- [ ] TaskList 목록/상세 Blade 컴포넌트
+- [ ] TaskList 관리 UI
 
 **예상 작업 기간**: 7-10일
+
+**참고**: 기존 Group 구조를 TaskList로 명확화하는 확장 작업입니다.
 
 ### Feature 5: 프론트엔드 통합 및 UX
 **목표**: 사용자 경험 최적화 및 반응형 디자인
@@ -347,7 +372,7 @@ Laravel 12.0의 기본 헬스체크 엔드포인트 `/up`이 자동으로 등록
 - [ ] 레이아웃 컴포넌트 설계 (헤더, 사이드바, 푸터)
 - [ ] 대시보드 화면 구현
 - [ ] 할 일 목록 화면
-- [ ] 그룹 관리 화면
+- [ ] TaskList 관리 화면
 - [ ] 반응형 디자인 (Tailwind CSS)
 - [ ] 로딩 상태 및 에러 처리 UI
 - [ ] 토스트 알림 컴포넌트
@@ -363,6 +388,11 @@ Laravel 12.0의 기본 헬스체크 엔드포인트 `/up`이 자동으로 등록
 - **코드 스타일**: 커밋 전 `vendor/bin/pint` 실행하여 코드 스타일 통일
 - **DDD 준수**: 레이어 간 의존성 규칙을 엄격히 준수
 - **테스트**: Feature별로 단위/통합 테스트 작성 필수
+- **외래키 규칙**:
+  - `foreign()` 제약조건 사용 금지
+  - 네이밍: `{단수형_테이블명}_{key}` (예: `user_id`, `task_list_id`)
+  - 모든 외래키 컬럼에 `comment('{table_name}.{key}')` 추가 필수
+  - 상세 규칙은 @BACKEND.md의 "외래키 규칙" 섹션 참조
 
 ## 상세 개발 가이드
 

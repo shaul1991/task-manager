@@ -25,7 +25,7 @@ final class EloquentTaskRepository implements TaskRepositoryInterface
             'title' => $task->title()->value(),
             'description' => $task->description()->value(),
             'completed_datetime' => $task->completedDateTime()?->toDateTime(),
-            'group_id' => $task->groupId(),
+            'task_list_id' => $task->taskListId(),
         ];
 
         if ($task->id() === null) {
@@ -52,16 +52,16 @@ final class EloquentTaskRepository implements TaskRepositoryInterface
     }
 
     public function findAll(
-        ?int $groupId = null,
+        ?int $taskListId = null,
         ?bool $completed = null,
         int $limit = 100,
         int $offset = 0
     ): array {
         $query = TaskEloquentModel::query();
 
-        // 그룹 ID 필터
-        if ($groupId !== null) {
-            $query->where('group_id', $groupId);
+        // TaskList ID 필터
+        if ($taskListId !== null) {
+            $query->where('task_list_id', $taskListId);
         }
 
         // 완료 상태 필터
@@ -94,17 +94,17 @@ final class EloquentTaskRepository implements TaskRepositoryInterface
         return TaskEloquentModel::where('id', $id)->exists();
     }
 
-    public function countByGroupId(int $groupId): int
+    public function countByTaskListId(int $taskListId): int
     {
-        return TaskEloquentModel::where('group_id', $groupId)->count();
+        return TaskEloquentModel::where('task_list_id', $taskListId)->count();
     }
 
-    public function countCompleted(?int $groupId = null): int
+    public function countCompleted(?int $taskListId = null): int
     {
         $query = TaskEloquentModel::whereNotNull('completed_datetime');
 
-        if ($groupId !== null) {
-            $query->where('group_id', $groupId);
+        if ($taskListId !== null) {
+            $query->where('task_list_id', $taskListId);
         }
 
         return $query->count();
@@ -124,7 +124,7 @@ final class EloquentTaskRepository implements TaskRepositoryInterface
             title: new TaskTitle($eloquentTask->title),
             description: new TaskDescription($eloquentTask->description),
             completedDateTime: $completedDateTime,
-            groupId: $eloquentTask->group_id,
+            taskListId: $eloquentTask->task_list_id,
             createdAt: new DateTimeImmutable($eloquentTask->created_at->toDateTimeString()),
             updatedAt: new DateTimeImmutable($eloquentTask->updated_at->toDateTimeString())
         );

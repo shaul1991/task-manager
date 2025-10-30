@@ -33,14 +33,14 @@ interface TaskRepositoryInterface
     /**
      * 필터 조건에 맞는 Task 목록을 조회합니다.
      *
-     * @param int|null $groupId 그룹 ID 필터 (null이면 필터링 안함)
+     * @param int|null $taskListId TaskList ID 필터 (null이면 필터링 안함)
      * @param bool|null $completed 완료 상태 필터 (null이면 필터링 안함)
      * @param int $limit 조회 개수 제한 (기본값: 100)
      * @param int $offset 오프셋 (기본값: 0)
      * @return array<Task> Task 엔티티 배열
      */
     public function findAll(
-        ?int $groupId = null,
+        ?int $taskListId = null,
         ?bool $completed = null,
         int $limit = 100,
         int $offset = 0
@@ -63,18 +63,18 @@ interface TaskRepositoryInterface
     public function existsById(int $id): bool;
 
     /**
-     * 그룹에 속한 Task 개수를 조회합니다.
+     * TaskList에 속한 Task 개수를 조회합니다.
      *
-     * @param int $groupId 그룹 ID
+     * @param int $taskListId TaskList ID
      * @return int Task 개수
      */
-    public function countByGroupId(int $groupId): int;
+    public function countByTaskListId(int $taskListId): int;
 
     /**
      * 완료된 Task 개수를 조회합니다.
      *
-     * @param int|null $groupId 그룹 ID (null이면 전체)
+     * @param int|null $taskListId TaskList ID (null이면 전체)
      * @return int 완료된 Task 개수
      */
-    public function countCompleted(?int $groupId = null): int;
+    public function countCompleted(?int $taskListId = null): int;
 }

@@ -107,7 +107,7 @@ return new class extends Migration
             $table->string('title', 255);
             $table->text('description')->nullable();
             $table->timestamp('completed_datetime')->nullable();
-            $table->unsignedBigInteger('group_id')->nullable();
+            $table->unsignedBigInteger('task_list_id')->nullable()->comment('task_lists.id');
 
             // 타임스탬프 컬럼 (timezone 지원 + 자동 관리 + 인덱스)
             $table->dateTimeTz('created_at')->useCurrent()->index('idx_created_at');
@@ -115,10 +115,8 @@ return new class extends Migration
             $table->dateTimeTz('deleted_at')->nullable()->index('idx_deleted_at');
 
             // 비즈니스 로직 인덱스
-            $table->index('group_id', 'idx_group_id');
+            $table->index('task_list_id', 'idx_task_list_id');
             $table->index('completed_datetime', 'idx_completed_datetime');
-
-            // Note: group_id foreign key는 groups 테이블 생성 후 추가 예정
         });
     }
 
@@ -135,6 +133,89 @@ return new class extends Migration
 - `useCurrentOnUpdate()`: 레코드 수정 시 자동으로 현재 시간으로 업데이트
 - `nullable()`: deleted_at은 삭제되지 않은 레코드에서 NULL이므로 필수
 - `index()`: 각 타임스탬프 컬럼에 인덱스를 직접 체이닝하여 설정
+- `comment()`: 외래키 컬럼은 참조하는 테이블과 키를 명시하여 가독성 향상
+
+#### 5. 외래키 규칙
+
+**외래키 제약조건(foreign key constraints)을 사용하지 않습니다.**
+
+Laravel Migration에서 `foreign()` 메서드를 사용하여 데이터베이스 레벨의 외래키 제약조건을 생성하지 않습니다. 대신 네이밍 규칙과 주석(comment)을 통해 관계를 명시합니다.
+
+**이유:**
+- 애플리케이션 레벨에서 참조 무결성 관리
+- 마이그레이션 및 롤백 작업의 유연성 확보
+- 테스트 환경에서의 데이터 조작 자유도 향상
+- 대규모 데이터베이스에서의 성능 이슈 회피
+
+**외래키 컬럼 네이밍 규칙:**
+
+형식: `{단수형_테이블명}_{key}`
+
+```php
+// ✅ 올바른 예시
+$table->unsignedBigInteger('user_id')->nullable();        // users 테이블 참조
+$table->unsignedBigInteger('task_list_id')->nullable();   // task_lists 테이블 참조
+$table->unsignedBigInteger('task_id')->nullable();        // tasks 테이블 참조
+
+// ❌ 잘못된 예시
+$table->unsignedBigInteger('users_id')->nullable();       // 복수형 사용 금지
+$table->unsignedBigInteger('taskListId')->nullable();     // camelCase 사용 금지
+$table->unsignedBigInteger('list_id')->nullable();        // 모호한 이름 사용 금지
+```
+
+**Comment 규칙:**
+
+모든 외래키 컬럼에는 `comment('{table_name}.{key}')` 형식으로 주석을 추가합니다.
+
+```php
+// ✅ 올바른 예시
+$table->unsignedBigInteger('user_id')->nullable()->comment('users.id (게스트는 NULL)');
+$table->unsignedBigInteger('task_list_id')->nullable()->comment('task_lists.id');
+$table->unsignedBigInteger('task_id')->comment('tasks.id');
+
+// ❌ 잘못된 예시
+$table->unsignedBigInteger('user_id')->nullable();                    // comment 누락
+$table->unsignedBigInteger('task_list_id')->comment('TaskList');      // 잘못된 형식
+```
+
+**인덱스 설정:**
+
+모든 외래키 컬럼에는 인덱스를 설정합니다. (조회 성능 향상 및 조인 최적화)
+
+```php
+// ✅ 올바른 예시
+$table->unsignedBigInteger('task_list_id')->nullable()->comment('task_lists.id');
+$table->index('task_list_id', 'idx_task_list_id');
+
+// 또는 체이닝 방식 (간단한 경우)
+$table->unsignedBigInteger('user_id')->nullable()->comment('users.id')->index('idx_user_id');
+```
+
+**전체 예시:**
+
+```php
+Schema::create('task_lists', function (Blueprint $table) {
+    $table->id();
+    $table->string('name', 255);
+    $table->text('description')->nullable();
+
+    // 외래키 컬럼 (네이밍 규칙 + comment + 인덱스)
+    $table->unsignedBigInteger('user_id')->nullable()->comment('users.id (게스트는 NULL)');
+
+    // 타임스탬프 컬럼
+    $table->dateTimeTz('created_at')->useCurrent()->index('idx_created_at');
+    $table->dateTimeTz('updated_at')->useCurrent()->useCurrentOnUpdate()->index('idx_updated_at');
+    $table->dateTimeTz('deleted_at')->nullable()->index('idx_deleted_at');
+
+    // 비즈니스 로직 인덱스
+    $table->index('user_id', 'idx_user_id');
+});
+```
+
+**주의사항:**
+- 외래키 제약조건을 사용하지 않으므로, 애플리케이션 레벨(Repository, UseCase)에서 참조 무결성을 보장해야 합니다.
+- 삭제 시 관련 데이터 처리는 SoftDelete와 애플리케이션 로직으로 관리합니다.
+- 데이터 정합성은 테스트 코드로 검증합니다.
 
 ## DDD 아키텍처 설계
 
@@ -257,30 +338,43 @@ Integration Tests:
 전체: 95개 테스트 통과 (176 assertions)
 ```
 
-#### 3. Group Context (그룹 컨텍스트)
-**책임**: 그룹 관리 및 할 일 컨테이너 역할
+#### 3. TaskList Context (할 일 목록 컨텍스트)
+**책임**: TaskList 관리 및 할 일 컨테이너 역할 (기존 Group을 TaskList로 명확화)
 
 **도메인 모델:**
 ```
 Aggregate Root:
-- Group (할 일 컬렉션 포함)
+- TaskList (할 일 컬렉션 포함)
 
 Value Objects:
-- GroupName
-- GroupDescription
+- TaskListName
+- TaskListDescription
 
 Domain Services:
-- GroupTaskService (그룹-할 일 연결 관리)
+- TaskListTaskService (TaskList-할 일 연결 관리)
 
 Repository Interfaces:
-- GroupRepositoryInterface
+- TaskListRepositoryInterface
 
 Domain Events:
-- GroupCreated
-- GroupUpdated
-- GroupDeleted
-- TaskAddedToGroup
-- TaskRemovedFromGroup
+- TaskListCreated
+- TaskListUpdated
+- TaskListDeleted
+- TaskAddedToTaskList
+- TaskRemovedFromTaskList
+```
+
+**Phase 2 확장 계획:**
+```
+SubTask Context (하위 작업 컨텍스트):
+- SubTask Entity (Task에 종속)
+- sub_task(n) : task(1) 관계
+- Task 생성 후 SubTask 추가 가능
+
+TaskGroup Context (카테고리 컨텍스트):
+- TaskGroup Entity (상위 카테고리)
+- task_list(n) : task_group(1) 관계
+- TaskList들을 묶는 최상위 계층
 ```
 
 ### DDD 레이어 구조
@@ -338,7 +432,7 @@ CREATE TABLE users (
 CREATE TABLE tasks (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NULL COMMENT '게스트는 NULL',
-    group_id BIGINT UNSIGNED NULL,
+    task_list_id BIGINT UNSIGNED NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT NULL,
     completed_datetime TIMESTAMP NULL COMMENT '완료 처리 시간 (NULL이면 미완료)',
@@ -346,15 +440,15 @@ CREATE TABLE tasks (
     updated_at TIMESTAMP NULL,
 
     INDEX idx_tasks_user_id (user_id),
-    INDEX idx_tasks_group_id (group_id),
+    INDEX idx_tasks_task_list_id (task_list_id),
     INDEX idx_tasks_completed (completed_datetime),
 
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL
+    FOREIGN KEY (task_list_id) REFERENCES task_lists(id) ON DELETE SET NULL
 );
 
--- 그룹 테이블
-CREATE TABLE groups (
+-- TaskList 테이블 (기존 groups 테이블)
+CREATE TABLE task_lists (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NULL COMMENT '게스트는 NULL',
     name VARCHAR(255) NOT NULL,
@@ -362,10 +456,47 @@ CREATE TABLE groups (
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
 
-    INDEX idx_groups_user_id (user_id),
+    INDEX idx_task_lists_user_id (user_id),
 
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- Phase 2: SubTask 테이블 (향후 구현)
+/*
+CREATE TABLE sub_tasks (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    task_id BIGINT UNSIGNED NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    is_completed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+
+    INDEX idx_sub_tasks_task_id (task_id),
+
+    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+);
+*/
+
+-- Phase 3: TaskGroup 테이블 (향후 구현)
+/*
+CREATE TABLE task_groups (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+
+    INDEX idx_task_groups_user_id (user_id),
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- TaskList에 task_group_id 컬럼 추가
+ALTER TABLE task_lists ADD COLUMN task_group_id BIGINT UNSIGNED NULL;
+ALTER TABLE task_lists ADD INDEX idx_task_lists_task_group_id (task_group_id);
+ALTER TABLE task_lists ADD FOREIGN KEY (task_group_id) REFERENCES task_groups(id) ON DELETE SET NULL;
+*/
 ```
 
 ## DDD 디렉토리 구조
@@ -411,22 +542,22 @@ src/
 │   │       ├── TaskCompleted.php
 │   │       └── TaskDeleted.php
 │   │
-│   └── Group/
+│   └── TaskList/
 │       ├── Entities/
-│       │   └── Group.php
+│       │   └── TaskList.php
 │       ├── ValueObjects/
-│       │   ├── GroupName.php
-│       │   └── GroupDescription.php
+│       │   ├── TaskListName.php
+│       │   └── TaskListDescription.php
 │       ├── Services/
-│       │   └── GroupTaskService.php
+│       │   └── TaskListTaskService.php
 │       ├── Repositories/
-│       │   └── GroupRepositoryInterface.php
+│       │   └── TaskListRepositoryInterface.php
 │       └── Events/
-│           ├── GroupCreated.php
-│           ├── GroupUpdated.php
-│           ├── GroupDeleted.php
-│           ├── TaskAddedToGroup.php
-│           └── TaskRemovedFromGroup.php
+│           ├── TaskListCreated.php
+│           ├── TaskListUpdated.php
+│           ├── TaskListDeleted.php
+│           ├── TaskAddedToTaskList.php
+│           └── TaskRemovedFromTaskList.php
 │
 ├── Application/                     # 애플리케이션 레이어 (유스케이스)
 │   ├── User/
@@ -450,17 +581,17 @@ src/
 │   │       ├── TaskDTO.php
 │   │       └── TaskListDTO.php
 │   │
-│   └── Group/
+│   └── TaskList/
 │       ├── UseCases/
-│       │   ├── CreateGroup.php
-│       │   ├── UpdateGroup.php
-│       │   ├── DeleteGroup.php
-│       │   ├── AddTaskToGroup.php
-│       │   ├── RemoveTaskFromGroup.php
-│       │   └── GetGroupTasks.php
+│       │   ├── CreateTaskList.php
+│       │   ├── UpdateTaskList.php
+│       │   ├── DeleteTaskList.php
+│       │   ├── AddTaskToTaskList.php
+│       │   ├── RemoveTaskFromTaskList.php
+│       │   └── GetTaskListTasks.php
 │       └── DTOs/
-│           ├── GroupDTO.php
-│           └── GroupTasksDTO.php
+│           ├── TaskListDTO.php
+│           └── TaskListTasksDTO.php
 │
 └── Infrastructure/                  # 인프라 레이어 (기술 구현)
     ├── User/
@@ -472,9 +603,9 @@ src/
     │   └── Repositories/
     │       └── EloquentTaskRepository.php
     │
-    └── Group/
+    └── TaskList/
         └── Repositories/
-            └── EloquentGroupRepository.php
+            └── EloquentTaskListRepository.php
 ```
 
 ## DDD 개발 가이드라인

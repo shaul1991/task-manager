@@ -18,7 +18,7 @@ final class Task
         private TaskTitle $title,
         private TaskDescription $description,
         private ?CompletedDateTime $completedDateTime,
-        private ?int $groupId,
+        private ?int $taskListId,
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt
     ) {
@@ -27,7 +27,7 @@ final class Task
     public static function create(
         TaskTitle $title,
         TaskDescription $description,
-        ?int $groupId = null
+        ?int $taskListId = null
     ): self {
         $now = new DateTimeImmutable();
 
@@ -36,7 +36,7 @@ final class Task
             title: $title,
             description: $description,
             completedDateTime: null,
-            groupId: $groupId,
+            taskListId: $taskListId,
             createdAt: $now,
             updatedAt: $now
         );
@@ -47,7 +47,7 @@ final class Task
         TaskTitle $title,
         TaskDescription $description,
         ?CompletedDateTime $completedDateTime,
-        ?int $groupId,
+        ?int $taskListId,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt
     ): self {
@@ -56,7 +56,7 @@ final class Task
             title: $title,
             description: $description,
             completedDateTime: $completedDateTime,
-            groupId: $groupId,
+            taskListId: $taskListId,
             createdAt: $createdAt,
             updatedAt: $updatedAt
         );
@@ -83,9 +83,9 @@ final class Task
         return $this->completedDateTime;
     }
 
-    public function groupId(): ?int
+    public function taskListId(): ?int
     {
-        return $this->groupId;
+        return $this->taskListId;
     }
 
     public function createdAt(): DateTimeImmutable
@@ -140,15 +140,15 @@ final class Task
         $this->updatedAt = new DateTimeImmutable();
     }
 
-    // 그룹 할당/해제
-    public function assignToGroup(?int $groupId): void
+    // TaskList 할당/해제
+    public function assignToTaskList(?int $taskListId): void
     {
-        $this->groupId = $groupId;
+        $this->taskListId = $taskListId;
         $this->updatedAt = new DateTimeImmutable();
     }
 
-    public function removeFromGroup(): void
+    public function removeFromTaskList(): void
     {
-        $this->assignToGroup(null);
+        $this->assignToTaskList(null);
     }
 }

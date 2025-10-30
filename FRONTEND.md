@@ -165,10 +165,10 @@ resources/views/components/
 │   ├── task-item.blade.php     # 할 일 항목
 │   ├── task-form.blade.php     # 할 일 폼
 │   └── task-filter.blade.php   # 할 일 필터
-├── group/
-│   ├── group-list.blade.php    # 그룹 목록
-│   ├── group-card.blade.php    # 그룹 카드
-│   └── group-form.blade.php    # 그룹 폼
+├── task-list/
+│   ├── task-list-list.blade.php    # TaskList 목록
+│   ├── task-list-card.blade.php    # TaskList 카드
+│   └── task-list-form.blade.php    # TaskList 폼
 └── ui/
     ├── button.blade.php        # 버튼
     ├── input.blade.php         # 입력 필드
@@ -177,8 +177,8 @@ resources/views/components/
 ```
 
 **네이밍 컨벤션:**
-- kebab-case 사용 (task-item, group-card)
-- 도메인별로 디렉토리 분리 (task/, group/, ui/)
+- kebab-case 사용 (task-item, task-list-card)
+- 도메인별로 디렉토리 분리 (task/, task-list/, ui/)
 - 명확한 목적을 나타내는 이름 사용
 
 ### 컴포넌트 클래스 위치
@@ -196,10 +196,10 @@ app/View/Components/
 │   ├── TaskItem.php
 │   ├── TaskForm.php
 │   └── TaskFilter.php
-├── Group/
-│   ├── GroupList.php
-│   ├── GroupCard.php
-│   └── GroupForm.php
+├── TaskList/
+│   ├── TaskListList.php
+│   ├── TaskListCard.php
+│   └── TaskListForm.php
 └── Ui/
     ├── Button.php
     ├── Input.php
@@ -222,12 +222,12 @@ app/View/Components/
       "title": "우유 사기",
       "description": "저지방 우유 2L",
       "completed_datetime": null,
-      "group_id": "uuid-v4",
+      "task_list_id": "uuid-v4",
       "created_at": "2025-10-30T10:00:00Z",
       "updated_at": "2025-10-30T10:00:00Z"
     }
   ],
-  "guest_groups": [
+  "guest_task_lists": [
     {
       "id": "uuid-v4",
       "name": "쇼핑 목록",
@@ -248,7 +248,7 @@ app/View/Components/
 // LocalStorage 키 상수
 const STORAGE_KEYS = {
     TASKS: 'guest_tasks',
-    GROUPS: 'guest_groups',
+    TASK_LISTS: 'guest_task_lists',
     SESSION: 'guest_session_id'
 };
 
@@ -319,49 +319,49 @@ export const guestTaskStorage = {
     }
 };
 
-// Group 저장소
-export const guestGroupStorage = {
-    // 모든 Group 가져오기
+// TaskList 저장소
+export const guestTaskListStorage = {
+    // 모든 TaskList 가져오기
     getAll() {
-        const groups = localStorage.getItem(STORAGE_KEYS.GROUPS);
-        return groups ? JSON.parse(groups) : [];
+        const taskLists = localStorage.getItem(STORAGE_KEYS.TASK_LISTS);
+        return taskLists ? JSON.parse(taskLists) : [];
     },
 
-    // Group 추가
-    add(group) {
-        const groups = this.getAll();
-        const newGroup = {
+    // TaskList 추가
+    add(taskList) {
+        const taskLists = this.getAll();
+        const newTaskList = {
             id: generateUUID(),
-            ...group,
+            ...taskList,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
-        groups.push(newGroup);
-        localStorage.setItem(STORAGE_KEYS.GROUPS, JSON.stringify(groups));
-        return newGroup;
+        taskLists.push(newTaskList);
+        localStorage.setItem(STORAGE_KEYS.TASK_LISTS, JSON.stringify(taskLists));
+        return newTaskList;
     },
 
-    // Group 업데이트
+    // TaskList 업데이트
     update(id, updates) {
-        const groups = this.getAll();
-        const index = groups.findIndex(g => g.id === id);
+        const taskLists = this.getAll();
+        const index = taskLists.findIndex(tl => tl.id === id);
         if (index !== -1) {
-            groups[index] = {
-                ...groups[index],
+            taskLists[index] = {
+                ...taskLists[index],
                 ...updates,
                 updated_at: new Date().toISOString()
             };
-            localStorage.setItem(STORAGE_KEYS.GROUPS, JSON.stringify(groups));
-            return groups[index];
+            localStorage.setItem(STORAGE_KEYS.TASK_LISTS, JSON.stringify(taskLists));
+            return taskLists[index];
         }
         return null;
     },
 
-    // Group 삭제
+    // TaskList 삭제
     delete(id) {
-        const groups = this.getAll();
-        const filtered = groups.filter(g => g.id !== id);
-        localStorage.setItem(STORAGE_KEYS.GROUPS, JSON.stringify(filtered));
+        const taskLists = this.getAll();
+        const filtered = taskLists.filter(tl => tl.id !== id);
+        localStorage.setItem(STORAGE_KEYS.TASK_LISTS, JSON.stringify(filtered));
     }
 };
 
@@ -382,14 +382,14 @@ export const guestSession = {
         return {
             session_id: this.getId(),
             tasks: guestTaskStorage.getAll(),
-            groups: guestGroupStorage.getAll()
+            task_lists: guestTaskListStorage.getAll()
         };
     },
 
     // 모든 게스트 데이터 삭제
     clearAll() {
         localStorage.removeItem(STORAGE_KEYS.TASKS);
-        localStorage.removeItem(STORAGE_KEYS.GROUPS);
+        localStorage.removeItem(STORAGE_KEYS.TASK_LISTS);
         localStorage.removeItem(STORAGE_KEYS.SESSION);
     }
 };
@@ -462,9 +462,9 @@ resources/js/
 │   ├── task/
 │   │   ├── taskList.js     # Task 목록 인터랙션
 │   │   └── taskForm.js     # Task 폼 인터랙션
-│   └── group/
-│       ├── groupList.js    # Group 목록 인터랙션
-│       └── groupForm.js    # Group 폼 인터랙션
+│   └── task-list/
+│       ├── taskListList.js    # TaskList 목록 인터랙션
+│       └── taskListForm.js    # TaskList 폼 인터랙션
 └── utils/
     ├── validation.js       # 폼 검증 유틸리티
     └── toast.js            # 토스트 알림 유틸리티

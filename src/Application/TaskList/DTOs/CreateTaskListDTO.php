@@ -2,19 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Src\Application\Task\DTOs;
+namespace Src\Application\TaskList\DTOs;
 
 /**
- * Create Task DTO
+ * Create TaskList DTO
  *
- * Task 생성 요청 데이터
+ * TaskList 생성 요청 데이터
  */
-final readonly class CreateTaskDTO
+final readonly class CreateTaskListDTO
 {
     public function __construct(
-        public string $title,
+        public string $name,
         public ?string $description = null,
-        public ?int $taskListId = null,
     ) {
     }
 
@@ -24,9 +23,8 @@ final readonly class CreateTaskDTO
     public static function fromArray(array $data): self
     {
         return new self(
-            title: $data['title'],
+            name: $data['name'],
             description: $data['description'] ?? null,
-            taskListId: $data['task_list_id'] ?? null,
         );
     }
 }
