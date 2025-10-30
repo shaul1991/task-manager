@@ -1,0 +1,132 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Src\Infrastructure\Task\Repositories;
+
+use App\Models\Task as TaskEloquentModel;
+use DateTimeImmutable;
+use Src\Domain\Task\Entities\Task;
+use Src\Domain\Task\Repositories\TaskRepositoryInterface;
+use Src\Domain\Task\ValueObjects\CompletedDateTime;
+use Src\Domain\Task\ValueObjects\TaskDescription;
+use Src\Domain\Task\ValueObjects\TaskTitle;
+
+/**
+ * Eloquent Task Repository 구현
+ *
+ * TaskRepositoryInterface를 Eloquent ORM을 사용하여 구현
+ */
+final class EloquentTaskRepository implements TaskRepositoryInterface
+{
+    public function save(Task $task): Task
+    {
+        $data = [
+            'title' => $task->title()->value(),
+            'description' => $task->description()->value(),
+            'completed_datetime' => $task->completedDateTime()?->toDateTime(),
+            'group_id' => $task->groupId(),
+        ];
+
+        if ($task->id() === null) {
+            // 새로운 Task 생성
+            $eloquentTask = TaskEloquentModel::create($data);
+        } else {
+            // 기존 Task 업데이트
+            $eloquentTask = TaskEloquentModel::findOrFail($task->id());
+            $eloquentTask->update($data);
+        }
+
+        return $this->toDomain($eloquentTask);
+    }
+
+    public function findById(int $id): ?Task
+    {
+        $eloquentTask = TaskEloquentModel::find($id);
+
+        if ($eloquentTask === null) {
+            return null;
+        }
+
+        return $this->toDomain($eloquentTask);
+    }
+
+    public function findAll(
+        ?int $groupId = null,
+        ?bool $completed = null,
+        int $limit = 100,
+        int $offset = 0
+    ): array {
+        $query = TaskEloquentModel::query();
+
+        // 그룹 ID 필터
+        if ($groupId !== null) {
+            $query->where('group_id', $groupId);
+        }
+
+        // 완료 상태 필터
+        if ($completed !== null) {
+            if ($completed) {
+                $query->whereNotNull('completed_datetime');
+            } else {
+                $query->whereNull('completed_datetime');
+            }
+        }
+
+        // 정렬: 최신순
+        $query->orderBy('created_at', 'desc');
+
+        // 페이지네이션
+        $query->limit($limit)->offset($offset);
+
+        $eloquentTasks = $query->get();
+
+        return $eloquentTasks->map(fn(TaskEloquentModel $task) => $this->toDomain($task))->all();
+    }
+
+    public function delete(int $id): void
+    {
+        TaskEloquentModel::where('id', $id)->delete();
+    }
+
+    public function existsById(int $id): bool
+    {
+        return TaskEloquentModel::where('id', $id)->exists();
+    }
+
+    public function countByGroupId(int $groupId): int
+    {
+        return TaskEloquentModel::where('group_id', $groupId)->count();
+    }
+
+    public function countCompleted(?int $groupId = null): int
+    {
+        $query = TaskEloquentModel::whereNotNull('completed_datetime');
+
+        if ($groupId !== null) {
+            $query->where('group_id', $groupId);
+        }
+
+        return $query->count();
+    }
+
+    /**
+     * Eloquent Model을 Domain Entity로 변환
+     */
+    private function toDomain(TaskEloquentModel $eloquentTask): Task
+    {
+        $completedDateTime = $eloquentTask->completed_datetime !== null
+            ? CompletedDateTime::fromDateTime($eloquentTask->completed_datetime)
+            : null;
+
+        return Task::reconstruct(
+            id: $eloquentTask->id,
+            title: new TaskTitle($eloquentTask->title),
+            description: new TaskDescription($eloquentTask->description),
+            completedDateTime: $completedDateTime,
+            groupId: $eloquentTask->group_id,
+            createdAt: new DateTimeImmutable($eloquentTask->created_at->toDateTimeString()),
+            updatedAt: new DateTimeImmutable($eloquentTask->updated_at->toDateTimeString())
+        );
+    }
+}

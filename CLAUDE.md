@@ -305,33 +305,89 @@ Domain Events:
 
 #### 2. Task Context (할 일 컨텍스트)
 **책임**: 할 일의 생명주기 관리 (생성, 수정, 완료, 삭제)
+**상태**: ✅ **완전 구현 완료** (Domain, Application, Infrastructure Layers)
 
-**도메인 모델:**
+**Domain Layer (완료):**
 ```
 Entities:
-- Task
+- Task (src/Domain/Task/Entities/Task.php)
 
 Value Objects:
-- TaskTitle (제목)
-- TaskDescription (설명)
-- CompletedDateTime (완료 처리 시간, nullable)
-
-Domain Services:
-- TaskCompletionService (완료 처리 로직)
+- TaskTitle (src/Domain/Task/ValueObjects/TaskTitle.php)
+- TaskDescription (src/Domain/Task/ValueObjects/TaskDescription.php)
+- CompletedDateTime (src/Domain/Task/ValueObjects/CompletedDateTime.php)
 
 Repository Interfaces:
-- TaskRepositoryInterface
+- TaskRepositoryInterface (src/Domain/Task/Repositories/TaskRepositoryInterface.php)
 
-Domain Events:
-- TaskCreated
-- TaskUpdated
-- TaskCompleted
-- TaskDeleted
+Exceptions:
+- InvalidTaskTitleException
+- TaskTitleTooLongException
+- InvalidCompletedDateTimeException
+- TaskAlreadyCompletedException
+- TaskNotCompletedException
 
 비즈니스 규칙:
 - completed_datetime이 NULL이면 미완료 상태
 - completed_datetime이 NULL이 아니면 완료 상태
 - 완료 처리 시 현재 시간을 completed_datetime에 설정
+```
+
+**Application Layer (완료):**
+```
+Use Cases:
+- CreateTask (src/Application/Task/UseCases/CreateTask.php)
+- UpdateTask (src/Application/Task/UseCases/UpdateTask.php)
+- CompleteTask (src/Application/Task/UseCases/CompleteTask.php)
+- UncompleteTask (src/Application/Task/UseCases/UncompleteTask.php)
+- DeleteTask (src/Application/Task/UseCases/DeleteTask.php)
+- GetTask (src/Application/Task/UseCases/GetTask.php)
+- GetTaskList (src/Application/Task/UseCases/GetTaskList.php)
+
+DTOs:
+- TaskDTO (src/Application/Task/DTOs/TaskDTO.php)
+- CreateTaskDTO (src/Application/Task/DTOs/CreateTaskDTO.php)
+- UpdateTaskDTO (src/Application/Task/DTOs/UpdateTaskDTO.php)
+- TaskListDTO (src/Application/Task/DTOs/TaskListDTO.php)
+```
+
+**Infrastructure Layer (완료):**
+```
+Repository Implementations:
+- EloquentTaskRepository (src/Infrastructure/Task/Repositories/EloquentTaskRepository.php)
+
+Eloquent Models:
+- Task (app/Models/Task.php)
+
+Database Migrations:
+- 2025_10_30_000001_create_tasks_table.php
+
+Service Provider Bindings:
+- DomainServiceProvider (app/Providers/DomainServiceProvider.php)
+  → TaskRepositoryInterface → EloquentTaskRepository
+```
+
+**테스트 커버리지 (완료):**
+```
+Domain Layer Tests:
+- TaskTest.php (20개 테스트)
+- TaskTitleTest.php (8개 테스트)
+- TaskDescriptionTest.php (8개 테스트)
+- CompletedDateTimeTest.php (9개 테스트)
+- Exception Tests (5개 파일, 24개 테스트)
+
+Application Layer Tests:
+- CreateTaskTest.php (3개 테스트)
+- GetTaskTest.php (2개 테스트)
+- DeleteTaskTest.php (2개 테스트)
+
+Infrastructure Layer Tests:
+- EloquentTaskRepositoryTest.php (12개 테스트)
+
+Integration Tests:
+- TaskLifecycleTest.php (5개 테스트)
+
+전체: 95개 테스트 통과 (176 assertions)
 ```
 
 #### 3. Group Context (그룹 컨텍스트)
