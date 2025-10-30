@@ -977,7 +977,7 @@ tests/
 모든 테스트는 가독성을 위해 Given-When-Then 패턴을 따라야 합니다.
 
 ```php
-public function test_complete_task_sets_completed_datetime(): void
+public function test_할일_완료_시_완료_일시_설정(): void
 {
     // Given - 테스트 준비
     $task = Task::create(
@@ -995,10 +995,29 @@ public function test_complete_task_sets_completed_datetime(): void
 ```
 
 #### 테스트 명명 규칙
-- `test_` 접두사 사용
-- 동작을 명확히 설명하는 이름 (영어)
-- 예: `test_complete_already_completed_task_throws_exception`
-- 예: `test_create_with_max_length_title`
+- `test_` 접두사 사용 (필수)
+- **메서드명은 한글로 작성** (필수)
+- 동작을 명확히 설명하는 이름
+- 언더스코어(_)로 단어 구분
+
+**예시:**
+```php
+// ✅ 올바른 예시 - 한글 메서드명
+public function test_할일_완료_시_완료_일시_설정(): void
+public function test_이미_완료된_할일_완료_시_예외_발생(): void
+public function test_빈_문자열은_예외_발생(): void
+public function test_예외가_올바른_상태_코드를_가짐(): void
+
+// ❌ 잘못된 예시 - 영어 메서드명
+public function test_complete_task_sets_completed_datetime(): void
+public function test_empty_string_throws_exception(): void
+```
+
+**한글 명명 가이드:**
+- `test_` 접두사 다음 한글로 테스트 내용 설명
+- 언더스코어로 단어/구문 구분
+- 명확하고 간결한 설명 사용
+- 테스트 의도가 즉시 이해되도록 작성
 
 #### 도메인 컴포넌트별 테스트 가이드
 
@@ -1009,7 +1028,7 @@ public function test_complete_task_sets_completed_datetime(): void
 - 엣지 케이스 (null, 빈 값, 최대/최소값)
 
 ```php
-public function test_empty_string_throws_exception(): void
+public function test_빈_문자열은_예외_발생(): void
 {
     // Then
     $this->expectException(InvalidTaskTitleException::class);
@@ -1026,7 +1045,7 @@ public function test_empty_string_throws_exception(): void
 - 도메인 규칙 위반 시 예외
 
 ```php
-public function test_complete_already_completed_task_throws_exception(): void
+public function test_이미_완료된_할일_완료_시_예외_발생(): void
 {
     // Given
     $task = Task::create(

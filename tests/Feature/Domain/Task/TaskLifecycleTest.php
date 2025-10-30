@@ -16,7 +16,7 @@ use Src\Domain\Task\Exceptions\TaskNotCompletedException;
  */
 final class TaskLifecycleTest extends TestCase
 {
-    public function test_complete_task_lifecycle_from_creation_to_completion(): void
+    public function test_생성부터_완료까지_전체_할일_라이프사이클(): void
     {
         // Given - 새로운 할 일 생성
         $task = Task::create(
@@ -54,7 +54,7 @@ final class TaskLifecycleTest extends TestCase
         $this->assertNull($task->completedDateTime());
     }
 
-    public function test_task_group_assignment_lifecycle(): void
+    public function test_할일_그룹_할당_라이프사이클(): void
     {
         // Given - 할 일 생성 (그룹 없음)
         $task = Task::create(
@@ -85,7 +85,7 @@ final class TaskLifecycleTest extends TestCase
         $this->assertNull($task->groupId());
     }
 
-    public function test_multiple_tasks_completion_tracking(): void
+    public function test_여러_할일의_완료_추적(): void
     {
         // Given - 여러 할 일 생성
         $task1 = Task::create(
@@ -118,7 +118,7 @@ final class TaskLifecycleTest extends TestCase
         $this->assertNotNull($task3->completedDateTime());
     }
 
-    public function test_exception_handling_for_duplicate_completion(): void
+    public function test_중복_완료_시_예외_처리(): void
     {
         // Given - 할 일 생성 및 완료
         $task = Task::create(
@@ -134,7 +134,7 @@ final class TaskLifecycleTest extends TestCase
         $task->complete();
     }
 
-    public function test_exception_handling_for_uncompleting_incomplete_task(): void
+    public function test_미완료_할일_미완료_처리_시_예외_처리(): void
     {
         // Given - 미완료 상태의 할 일
         $task = Task::create(

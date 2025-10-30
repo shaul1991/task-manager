@@ -10,7 +10,7 @@ use Src\Shared\Exceptions\DomainException;
 
 final class InvalidCompletedDateTimeExceptionTest extends TestCase
 {
-    public function test_exception_has_correct_message(): void
+    public function test_예외가_올바른_메시지를_가짐(): void
     {
         // Given
         $invalidDateTime = '2024/10/30 14:30:00';
@@ -22,7 +22,7 @@ final class InvalidCompletedDateTimeExceptionTest extends TestCase
         $this->assertEquals('Invalid datetime format. Expected: Y-m-d H:i:s', $exception->getMessage());
     }
 
-    public function test_exception_has_correct_status_code(): void
+    public function test_예외가_올바른_상태_코드를_가짐(): void
     {
         // When
         $exception = new InvalidCompletedDateTimeException('invalid');
@@ -31,7 +31,7 @@ final class InvalidCompletedDateTimeExceptionTest extends TestCase
         $this->assertEquals(422, $exception->getStatusCode());
     }
 
-    public function test_exception_has_correct_error_code(): void
+    public function test_예외가_올바른_에러_코드를_가짐(): void
     {
         // When
         $exception = new InvalidCompletedDateTimeException('invalid');
@@ -40,7 +40,7 @@ final class InvalidCompletedDateTimeExceptionTest extends TestCase
         $this->assertEquals('TASK_VALIDATION_003', $exception->getErrorCode());
     }
 
-    public function test_exception_includes_context(): void
+    public function test_예외가_컨텍스트를_포함함(): void
     {
         // Given
         $invalidDateTime = '2024/10/30';
@@ -54,7 +54,7 @@ final class InvalidCompletedDateTimeExceptionTest extends TestCase
         $this->assertEquals('Y-m-d H:i:s', $context['expected_format']);
     }
 
-    public function test_exception_is_instance_of_domain_exception(): void
+    public function test_예외가_도메인_예외의_인스턴스임(): void
     {
         // When
         $exception = new InvalidCompletedDateTimeException('invalid');

@@ -17,7 +17,7 @@ final class TaskTest extends TestCase
 {
     // ========== 팩토리 메서드 테스트 ==========
 
-    public function test_create_task_with_title_and_description(): void
+    public function test_제목과_설명으로_할일_생성(): void
     {
         // Given
         $title = new TaskTitle('Buy groceries');
@@ -36,7 +36,7 @@ final class TaskTest extends TestCase
         $this->assertInstanceOf(DateTimeImmutable::class, $task->updatedAt());
     }
 
-    public function test_create_task_with_group_id(): void
+    public function test_그룹_ID와_함께_할일_생성(): void
     {
         // Given
         $title = new TaskTitle('Team meeting');
@@ -50,7 +50,7 @@ final class TaskTest extends TestCase
         $this->assertEquals($groupId, $task->groupId());
     }
 
-    public function test_create_task_is_not_completed(): void
+    public function test_생성된_할일은_미완료_상태(): void
     {
         // Given
         $task = Task::create(
@@ -63,7 +63,7 @@ final class TaskTest extends TestCase
         $this->assertNull($task->completedDateTime());
     }
 
-    public function test_reconstruct_task_with_all_properties(): void
+    public function test_모든_속성으로_할일_재구성(): void
     {
         // Given
         $id = 42;
@@ -95,7 +95,7 @@ final class TaskTest extends TestCase
         $this->assertEquals($updatedAt, $task->updatedAt());
     }
 
-    public function test_reconstruct_completed_task(): void
+    public function test_완료된_할일_재구성(): void
     {
         // Given
         $completedDateTime = CompletedDateTime::fromString('2024-10-30 14:30:00');
@@ -118,7 +118,7 @@ final class TaskTest extends TestCase
 
     // ========== 완료 상태 관리 테스트 ==========
 
-    public function test_complete_task_sets_completed_datetime(): void
+    public function test_할일_완료_시_완료_일시_설정(): void
     {
         // Given
         $task = Task::create(
@@ -146,7 +146,7 @@ final class TaskTest extends TestCase
         );
     }
 
-    public function test_complete_already_completed_task_throws_exception(): void
+    public function test_이미_완료된_할일_완료_시_예외_발생(): void
     {
         // Given
         $task = Task::create(
@@ -162,7 +162,7 @@ final class TaskTest extends TestCase
         $task->complete();
     }
 
-    public function test_is_completed_returns_true_for_completed_task(): void
+    public function test_완료된_할일은_isCompleted_참_반환(): void
     {
         // Given
         $task = Task::create(
@@ -177,7 +177,7 @@ final class TaskTest extends TestCase
         $this->assertTrue($task->isCompleted());
     }
 
-    public function test_uncomplete_task_clears_completed_datetime(): void
+    public function test_할일_미완료_처리_시_완료_일시_제거(): void
     {
         // Given
         $task = Task::create(
@@ -194,7 +194,7 @@ final class TaskTest extends TestCase
         $this->assertNull($task->completedDateTime());
     }
 
-    public function test_uncomplete_not_completed_task_throws_exception(): void
+    public function test_미완료_할일을_미완료_처리_시_예외_발생(): void
     {
         // Given
         $task = Task::create(
@@ -209,7 +209,7 @@ final class TaskTest extends TestCase
         $task->uncomplete();
     }
 
-    public function test_is_completed_returns_false_for_incomplete_task(): void
+    public function test_미완료_할일은_isCompleted_거짓_반환(): void
     {
         // Given
         $task = Task::create(
@@ -223,7 +223,7 @@ final class TaskTest extends TestCase
 
     // ========== 업데이트 메서드 테스트 ==========
 
-    public function test_update_title_changes_title(): void
+    public function test_제목_수정_시_제목_변경(): void
     {
         // Given
         $task = Task::create(
@@ -239,7 +239,7 @@ final class TaskTest extends TestCase
         $this->assertEquals($newTitle, $task->title());
     }
 
-    public function test_update_title_updates_updated_at(): void
+    public function test_제목_수정_시_수정일시_갱신(): void
     {
         // Given
         $task = Task::create(
@@ -260,7 +260,7 @@ final class TaskTest extends TestCase
         );
     }
 
-    public function test_update_description_changes_description(): void
+    public function test_설명_수정_시_설명_변경(): void
     {
         // Given
         $task = Task::create(
@@ -276,7 +276,7 @@ final class TaskTest extends TestCase
         $this->assertEquals($newDescription, $task->description());
     }
 
-    public function test_update_description_updates_updated_at(): void
+    public function test_설명_수정_시_수정일시_갱신(): void
     {
         // Given
         $task = Task::create(
@@ -299,7 +299,7 @@ final class TaskTest extends TestCase
 
     // ========== 그룹 관리 테스트 ==========
 
-    public function test_assign_to_group_sets_group_id(): void
+    public function test_그룹_할당_시_그룹_ID_설정(): void
     {
         // Given
         $task = Task::create(
@@ -315,7 +315,7 @@ final class TaskTest extends TestCase
         $this->assertEquals($groupId, $task->groupId());
     }
 
-    public function test_remove_from_group_clears_group_id(): void
+    public function test_그룹_제거_시_그룹_ID_해제(): void
     {
         // Given
         $task = Task::create(
@@ -331,7 +331,7 @@ final class TaskTest extends TestCase
         $this->assertNull($task->groupId());
     }
 
-    public function test_assign_to_group_updates_updated_at(): void
+    public function test_그룹_할당_시_수정일시_갱신(): void
     {
         // Given
         $task = Task::create(
@@ -354,7 +354,7 @@ final class TaskTest extends TestCase
 
     // ========== 엣지 케이스 테스트 ==========
 
-    public function test_complete_and_uncomplete_cycle(): void
+    public function test_완료와_미완료_순환(): void
     {
         // Given
         $task = Task::create(
@@ -378,7 +378,7 @@ final class TaskTest extends TestCase
         $this->assertNotNull($task->completedDateTime());
     }
 
-    public function test_task_immutability_of_created_at(): void
+    public function test_생성일시의_불변성(): void
     {
         // Given
         $task = Task::create(

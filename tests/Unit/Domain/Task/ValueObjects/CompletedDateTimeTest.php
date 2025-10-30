@@ -12,7 +12,7 @@ use Src\Domain\Task\Exceptions\InvalidCompletedDateTimeException;
 
 final class CompletedDateTimeTest extends TestCase
 {
-    public function test_now_creates_current_datetime(): void
+    public function test_now는_현재_일시_생성(): void
     {
         // Given
         $before = new DateTimeImmutable();
@@ -28,7 +28,7 @@ final class CompletedDateTimeTest extends TestCase
         $this->assertLessThanOrEqual($after->getTimestamp(), $value->getTimestamp());
     }
 
-    public function test_from_string_with_valid_format(): void
+    public function test_유효한_형식_문자열로_생성(): void
     {
         // Given
         $dateString = '2024-10-30 14:30:00';
@@ -40,7 +40,7 @@ final class CompletedDateTimeTest extends TestCase
         $this->assertEquals($dateString, $completedDateTime->toString());
     }
 
-    public function test_from_string_with_invalid_format_throws_exception(): void
+    public function test_잘못된_형식_문자열은_예외_발생(): void
     {
         // Given
         $invalidDateString = '2024/10/30 14:30:00'; // 잘못된 형식
@@ -53,7 +53,7 @@ final class CompletedDateTimeTest extends TestCase
         CompletedDateTime::fromString($invalidDateString);
     }
 
-    public function test_from_datetime_with_datetime(): void
+    public function test_DateTime_객체로_생성(): void
     {
         // Given
         $dateTime = new DateTime('2024-10-30 14:30:00');
@@ -65,7 +65,7 @@ final class CompletedDateTimeTest extends TestCase
         $this->assertEquals('2024-10-30 14:30:00', $completedDateTime->toString());
     }
 
-    public function test_from_datetime_with_datetime_immutable(): void
+    public function test_DateTimeImmutable_객체로_생성(): void
     {
         // Given
         $dateTime = new DateTimeImmutable('2024-10-30 14:30:00');
@@ -77,7 +77,7 @@ final class CompletedDateTimeTest extends TestCase
         $this->assertEquals($dateTime, $completedDateTime->value());
     }
 
-    public function test_to_datetime_converts_to_mutable(): void
+    public function test_toDateTime은_가변_DateTime으로_변환(): void
     {
         // Given
         $completedDateTime = CompletedDateTime::fromString('2024-10-30 14:30:00');
@@ -90,7 +90,7 @@ final class CompletedDateTimeTest extends TestCase
         $this->assertEquals('2024-10-30 14:30:00', $mutableDateTime->format('Y-m-d H:i:s'));
     }
 
-    public function test_to_string_formats_correctly(): void
+    public function test_toString은_올바른_형식으로_반환(): void
     {
         // Given
         $completedDateTime = CompletedDateTime::fromString('2024-10-30 14:30:00');
@@ -102,7 +102,7 @@ final class CompletedDateTimeTest extends TestCase
         $this->assertEquals('2024-10-30 14:30:00', $result);
     }
 
-    public function test_equals_returns_true_for_same_timestamp(): void
+    public function test_같은_타임스탬프면_동등성_참_반환(): void
     {
         // Given
         $datetime1 = CompletedDateTime::fromString('2024-10-30 14:30:00');
@@ -115,7 +115,7 @@ final class CompletedDateTimeTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_equals_with_null_returns_false(): void
+    public function test_널과_비교_시_동등성_거짓_반환(): void
     {
         // Given
         $datetime = CompletedDateTime::now();

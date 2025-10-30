@@ -9,7 +9,7 @@ use Src\Domain\Task\ValueObjects\TaskDescription;
 
 final class TaskDescriptionTest extends TestCase
 {
-    public function test_create_with_valid_description(): void
+    public function test_유효한_설명으로_생성(): void
     {
         // Given
         $descriptionString = 'This is a detailed task description';
@@ -22,7 +22,7 @@ final class TaskDescriptionTest extends TestCase
         $this->assertFalse($description->isEmpty());
     }
 
-    public function test_create_with_null_description(): void
+    public function test_널_설명으로_생성(): void
     {
         // When
         $description = new TaskDescription(null);
@@ -32,7 +32,7 @@ final class TaskDescriptionTest extends TestCase
         $this->assertTrue($description->isEmpty());
     }
 
-    public function test_is_empty_returns_true_for_empty_string(): void
+    public function test_빈_문자열이면_isEmpty_참_반환(): void
     {
         // Given
         $description = new TaskDescription('');
@@ -41,7 +41,7 @@ final class TaskDescriptionTest extends TestCase
         $this->assertTrue($description->isEmpty());
     }
 
-    public function test_is_empty_returns_true_for_whitespace(): void
+    public function test_공백_문자이면_isEmpty_참_반환(): void
     {
         // Given
         $description = new TaskDescription('   ');
@@ -50,7 +50,7 @@ final class TaskDescriptionTest extends TestCase
         $this->assertTrue($description->isEmpty());
     }
 
-    public function test_is_empty_returns_false_for_valid_content(): void
+    public function test_유효한_내용이면_isEmpty_거짓_반환(): void
     {
         // Given
         $description = new TaskDescription('Valid content');
@@ -59,7 +59,7 @@ final class TaskDescriptionTest extends TestCase
         $this->assertFalse($description->isEmpty());
     }
 
-    public function test_equals_returns_true_for_same_value(): void
+    public function test_같은_값이면_동등성_참_반환(): void
     {
         // Given
         $desc1 = new TaskDescription('Same description');
@@ -72,7 +72,7 @@ final class TaskDescriptionTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_equals_returns_true_for_both_null(): void
+    public function test_둘_다_널이면_동등성_참_반환(): void
     {
         // Given
         $desc1 = new TaskDescription(null);
@@ -85,7 +85,7 @@ final class TaskDescriptionTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_to_string_returns_empty_for_null(): void
+    public function test_널이면_문자열_변환_시_빈_문자열_반환(): void
     {
         // Given
         $description = new TaskDescription(null);

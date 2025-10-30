@@ -10,7 +10,7 @@ use Src\Shared\Exceptions\DomainException;
 
 final class InvalidTaskTitleExceptionTest extends TestCase
 {
-    public function test_exception_has_correct_message(): void
+    public function test_예외가_올바른_메시지를_가짐(): void
     {
         // When
         $exception = new InvalidTaskTitleException();
@@ -19,7 +19,7 @@ final class InvalidTaskTitleExceptionTest extends TestCase
         $this->assertEquals('Task title cannot be empty', $exception->getMessage());
     }
 
-    public function test_exception_has_correct_status_code(): void
+    public function test_예외가_올바른_상태_코드를_가짐(): void
     {
         // When
         $exception = new InvalidTaskTitleException();
@@ -28,7 +28,7 @@ final class InvalidTaskTitleExceptionTest extends TestCase
         $this->assertEquals(422, $exception->getStatusCode());
     }
 
-    public function test_exception_has_correct_error_code(): void
+    public function test_예외가_올바른_에러_코드를_가짐(): void
     {
         // When
         $exception = new InvalidTaskTitleException();
@@ -37,7 +37,7 @@ final class InvalidTaskTitleExceptionTest extends TestCase
         $this->assertEquals('TASK_VALIDATION_001', $exception->getErrorCode());
     }
 
-    public function test_exception_is_instance_of_domain_exception(): void
+    public function test_예외가_도메인_예외의_인스턴스임(): void
     {
         // When
         $exception = new InvalidTaskTitleException();

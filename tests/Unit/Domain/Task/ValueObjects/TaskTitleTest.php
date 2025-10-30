@@ -11,7 +11,7 @@ use Src\Domain\Task\Exceptions\TaskTitleTooLongException;
 
 final class TaskTitleTest extends TestCase
 {
-    public function test_create_with_valid_title(): void
+    public function test_유효한_제목으로_생성(): void
     {
         // Given
         $titleString = 'Buy groceries';
@@ -23,7 +23,7 @@ final class TaskTitleTest extends TestCase
         $this->assertEquals($titleString, $title->value());
     }
 
-    public function test_create_with_max_length_title(): void
+    public function test_최대_길이_제목으로_생성(): void
     {
         // Given
         $maxLengthTitle = str_repeat('a', 255);
@@ -35,7 +35,7 @@ final class TaskTitleTest extends TestCase
         $this->assertEquals($maxLengthTitle, $title->value());
     }
 
-    public function test_empty_string_throws_exception(): void
+    public function test_빈_문자열은_예외_발생(): void
     {
         // Then
         $this->expectException(InvalidTaskTitleException::class);
@@ -45,7 +45,7 @@ final class TaskTitleTest extends TestCase
         new TaskTitle('');
     }
 
-    public function test_title_exceeding_max_length_throws_exception(): void
+    public function test_최대_길이_초과_시_예외_발생(): void
     {
         // Given
         $longTitle = str_repeat('a', 256);
@@ -57,7 +57,7 @@ final class TaskTitleTest extends TestCase
         new TaskTitle($longTitle);
     }
 
-    public function test_multibyte_length_validation(): void
+    public function test_멀티바이트_길이_검증(): void
     {
         // Given - 한글은 1글자가 3바이트이지만, mb_strlen은 1로 계산
         $koreanTitle = str_repeat('가', 255); // 255자
@@ -73,7 +73,7 @@ final class TaskTitleTest extends TestCase
         new TaskTitle(str_repeat('가', 256));
     }
 
-    public function test_equals_returns_true_for_same_value(): void
+    public function test_같은_값이면_동등성_참_반환(): void
     {
         // Given
         $title1 = new TaskTitle('Same title');
@@ -86,7 +86,7 @@ final class TaskTitleTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_equals_returns_false_for_different_value(): void
+    public function test_다른_값이면_동등성_거짓_반환(): void
     {
         // Given
         $title1 = new TaskTitle('Title A');
@@ -99,7 +99,7 @@ final class TaskTitleTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_to_string_returns_value(): void
+    public function test_문자열_변환_시_값_반환(): void
     {
         // Given
         $titleString = 'String conversion test';
