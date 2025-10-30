@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Src\Domain\Task\ValueObjects;
 
-use InvalidArgumentException;
+use Src\Domain\Task\Exceptions\InvalidTaskTitleException;
+use Src\Domain\Task\Exceptions\TaskTitleTooLongException;
 
 final readonly class TaskTitle
 {
@@ -21,13 +22,12 @@ final readonly class TaskTitle
         $trimmed = trim($this->value);
 
         if ($trimmed === '') {
-            throw new InvalidArgumentException('Task title cannot be empty');
+            throw new InvalidTaskTitleException();
         }
 
-        if (mb_strlen($trimmed) > self::MAX_LENGTH) {
-            throw new InvalidArgumentException(
-                sprintf('Task title cannot exceed %d characters', self::MAX_LENGTH)
-            );
+        $actualLength = mb_strlen($trimmed);
+        if ($actualLength > self::MAX_LENGTH) {
+            throw new TaskTitleTooLongException(self::MAX_LENGTH, $actualLength);
         }
     }
 

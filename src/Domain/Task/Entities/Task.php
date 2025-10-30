@@ -108,7 +108,7 @@ final class Task
     public function complete(): void
     {
         if ($this->isCompleted()) {
-            throw new TaskAlreadyCompletedException();
+            throw new TaskAlreadyCompletedException($this->id);
         }
 
         $this->completedDateTime = CompletedDateTime::now();
@@ -119,7 +119,7 @@ final class Task
     public function uncomplete(): void
     {
         if (!$this->isCompleted()) {
-            throw new TaskNotCompletedException();
+            throw new TaskNotCompletedException($this->id);
         }
 
         $this->completedDateTime = null;

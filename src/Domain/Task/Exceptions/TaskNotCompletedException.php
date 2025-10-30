@@ -4,12 +4,24 @@ declare(strict_types=1);
 
 namespace Src\Domain\Task\Exceptions;
 
-use DomainException;
+use Src\Shared\Exceptions\DomainException;
+use Throwable;
 
 final class TaskNotCompletedException extends DomainException
 {
-    public function __construct()
+    public function __construct(?int $taskId = null, array $context = [], ?Throwable $previous = null)
     {
-        parent::__construct('Task is not completed yet');
+        $contextData = $context;
+        if ($taskId !== null) {
+            $contextData['task_id'] = $taskId;
+        }
+
+        parent::__construct(
+            message: 'Task is not completed yet',
+            statusCode: 400,
+            errorCode: 'TASK_002',
+            context: $contextData,
+            previous: $previous
+        );
     }
 }

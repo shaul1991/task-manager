@@ -6,7 +6,7 @@ namespace Src\Domain\Task\ValueObjects;
 
 use DateTimeImmutable;
 use DateTime;
-use InvalidArgumentException;
+use Src\Domain\Task\Exceptions\InvalidCompletedDateTimeException;
 
 final readonly class CompletedDateTime
 {
@@ -25,9 +25,7 @@ final readonly class CompletedDateTime
         $date = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $datetime);
 
         if ($date === false) {
-            throw new InvalidArgumentException(
-                'Invalid datetime format. Expected: Y-m-d H:i:s'
-            );
+            throw new InvalidCompletedDateTimeException($datetime);
         }
 
         return new self($date);
