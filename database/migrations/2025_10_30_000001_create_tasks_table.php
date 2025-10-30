@@ -18,11 +18,16 @@ return new class extends Migration
             $table->timestamp('completed_datetime')->nullable();
             $table->unsignedBigInteger('group_id')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
-            // 인덱스
-            $table->index('group_id');
-            $table->index('completed_datetime');
-            $table->index('created_at');
+            // 비즈니스 로직 인덱스
+            $table->index('group_id', 'idx_group_id');
+            $table->index('completed_datetime', 'idx_completed_datetime');
+
+            // 필수 타임스탬프 인덱스
+            $table->index('created_at', 'idx_created_at');
+            $table->index('updated_at', 'idx_updated_at');
+            $table->index('deleted_at', 'idx_deleted_at');
 
             // Note: group_id foreign key는 groups 테이블 생성 후 추가 예정
         });

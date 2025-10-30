@@ -168,8 +168,14 @@ final class EloquentTaskRepositoryTest extends TestCase
         // When
         $this->repository->delete($taskId);
 
-        // Then
-        $this->assertDatabaseMissing('tasks', ['id' => $taskId]);
+        // Then - SoftDelete로 인해 deleted_at이 설정됨
+        $this->assertDatabaseHas('tasks', [
+            'id' => $taskId,
+        ]);
+        $this->assertDatabaseMissing('tasks', [
+            'id' => $taskId,
+            'deleted_at' => null,
+        ]);
         $this->assertFalse($this->repository->existsById($taskId));
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Task Eloquent Model
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Task extends Model
 {
+    use SoftDeletes;
+
     /**
      * The table associated with the model.
      *
@@ -42,6 +45,7 @@ class Task extends Model
         'completed_datetime' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /**

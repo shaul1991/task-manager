@@ -92,6 +92,130 @@ npm run dev                      # Vite 개발 서버 (HMR 활성화)
 npm run build                    # 프로덕션 빌드
 ```
 
+## Laravel 개발 규칙
+
+### Model 규칙
+
+**SoftDelete 사용 필수:**
+- 모든 Model은 `SoftDeletes` trait를 사용합니다.
+- 데이터 삭제 시 실제 레코드를 삭제하지 않고 `deleted_at` 컬럼을 설정합니다.
+- 데이터 복구 및 감사 추적(audit trail)을 위해 필수적으로 적용합니다.
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Task extends Model
+{
+    use SoftDeletes;
+
+    protected $fillable = ['title', 'description', ...];
+
+    protected $casts = [
+        'deleted_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+}
+```
+
+### Migration 파일 규칙
+
+#### 1. SoftDelete 컬럼 추가
+모든 테이블에 `softDeletes()` 메서드를 사용하여 `deleted_at` 컬럼을 추가합니다.
+
+```php
+Schema::create('tasks', function (Blueprint $table) {
+    $table->id();
+    // ... 다른 컬럼들
+    $table->timestamps();
+    $table->softDeletes();  // deleted_at 컬럼 추가
+});
+```
+
+#### 2. 인덱스 네이밍 규칙
+
+**단일 컬럼 인덱스:**
+- 형식: `idx_{column_name}`
+- 예: `idx_group_id`, `idx_completed_datetime`
+
+```php
+$table->index('group_id', 'idx_group_id');
+$table->index('completed_datetime', 'idx_completed_datetime');
+```
+
+**복합 인덱스:**
+- 형식: `idx_{first_column_name}_{numbering}`
+- numbering은 `01`, `02`, `03` ... 형식으로 01부터 시작
+
+```php
+// 첫 번째 복합 인덱스
+$table->index(['user_id', 'created_at'], 'idx_user_id_01');
+
+// 두 번째 복합 인덱스
+$table->index(['user_id', 'status'], 'idx_user_id_02');
+```
+
+#### 3. 필수 인덱스
+다음 컬럼들은 **항상 인덱스를 추가**합니다:
+- `created_at`: 생성일시 기반 정렬/조회를 위해
+- `updated_at`: 수정일시 기반 조회를 위해
+- `deleted_at`: SoftDelete 조회 성능 향상을 위해
+
+```php
+Schema::create('tasks', function (Blueprint $table) {
+    $table->id();
+    // ... 다른 컬럼들
+    $table->timestamps();
+    $table->softDeletes();
+
+    // 필수 인덱스
+    $table->index('created_at', 'idx_created_at');
+    $table->index('updated_at', 'idx_updated_at');
+    $table->index('deleted_at', 'idx_deleted_at');
+});
+```
+
+#### 4. 전체 Migration 예시
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('tasks', function (Blueprint $table) {
+            $table->id();
+            $table->string('title', 255);
+            $table->text('description')->nullable();
+            $table->timestamp('completed_datetime')->nullable();
+            $table->unsignedBigInteger('group_id')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+
+            // 비즈니스 로직 인덱스
+            $table->index('group_id', 'idx_group_id');
+            $table->index('completed_datetime', 'idx_completed_datetime');
+
+            // 필수 타임스탬프 인덱스
+            $table->index('created_at', 'idx_created_at');
+            $table->index('updated_at', 'idx_updated_at');
+            $table->index('deleted_at', 'idx_deleted_at');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('tasks');
+    }
+};
+```
+
 ## 아키텍처
 
 ### Laravel 12.0 부트스트랩 구조
