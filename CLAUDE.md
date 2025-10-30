@@ -936,6 +936,191 @@ public function __construct(
 </div>
 ```
 
+### 5. 테스트 작성 규칙
+
+#### 테스트 작성 필수
+**도메인 코드 작성 시 테스트 코드 작성은 필수입니다.**
+
+모든 도메인 레이어 컴포넌트(Entity, Value Object, Exception)는 해당하는 유닛 테스트를 가져야 하며, 주요 비즈니스 시나리오는 통합 테스트로 검증해야 합니다.
+
+#### 커버리지 목표
+- **유닛 테스트**: 80-90% 목표
+- **통합 테스트**: 70-80% 목표
+
+유닛 테스트는 개별 컴포넌트의 동작을 검증하고, 통합 테스트는 여러 컴포넌트가 함께 동작하는 실제 시나리오를 검증합니다.
+
+#### 테스트 파일 위치
+```
+tests/
+├── Unit/Domain/           # 도메인 유닛 테스트
+│   ├── Task/
+│   │   ├── Entities/
+│   │   │   └── TaskTest.php
+│   │   ├── ValueObjects/
+│   │   │   ├── TaskTitleTest.php
+│   │   │   ├── TaskDescriptionTest.php
+│   │   │   └── CompletedDateTimeTest.php
+│   │   └── Exceptions/
+│   │       └── InvalidTaskTitleExceptionTest.php
+│   ├── User/
+│   └── Group/
+└── Feature/Domain/        # 도메인 통합 테스트
+    ├── Task/
+    │   └── TaskLifecycleTest.php
+    ├── User/
+    └── Group/
+```
+
+#### 테스트 패턴
+**Given-When-Then 패턴 사용:**
+
+모든 테스트는 가독성을 위해 Given-When-Then 패턴을 따라야 합니다.
+
+```php
+public function test_complete_task_sets_completed_datetime(): void
+{
+    // Given - 테스트 준비
+    $task = Task::create(
+        new TaskTitle('Test task'),
+        new TaskDescription('Description')
+    );
+
+    // When - 실행
+    $task->complete();
+
+    // Then - 검증
+    $this->assertTrue($task->isCompleted());
+    $this->assertNotNull($task->completedDateTime());
+}
+```
+
+#### 테스트 명명 규칙
+- `test_` 접두사 사용
+- 동작을 명확히 설명하는 이름 (영어)
+- 예: `test_complete_already_completed_task_throws_exception`
+- 예: `test_create_with_max_length_title`
+
+#### 도메인 컴포넌트별 테스트 가이드
+
+**Value Object 테스트:**
+- 유효성 검증 로직 (경계값, 예외 케이스)
+- 동등성 비교 (equals 메서드)
+- 변환 메서드 (toString, value)
+- 엣지 케이스 (null, 빈 값, 최대/최소값)
+
+```php
+public function test_empty_string_throws_exception(): void
+{
+    // Then
+    $this->expectException(InvalidTaskTitleException::class);
+
+    // When
+    new TaskTitle('');
+}
+```
+
+**Entity 테스트:**
+- 팩토리 메서드 (create, reconstruct)
+- 모든 비즈니스 로직 메서드
+- 상태 변경 및 불변성
+- 도메인 규칙 위반 시 예외
+
+```php
+public function test_complete_already_completed_task_throws_exception(): void
+{
+    // Given
+    $task = Task::create(
+        new TaskTitle('Task'),
+        new TaskDescription('Description')
+    );
+    $task->complete();
+
+    // Then
+    $this->expectException(TaskAlreadyCompletedException::class);
+
+    // When
+    $task->complete();
+}
+```
+
+**Exception 테스트:**
+- HTTP 상태 코드 (getStatusCode)
+- 에러 코드 (getErrorCode)
+- 메시지 (getMessage)
+- 컨텍스트 데이터 (getContext)
+- 상속 구조 (DomainException, ApplicationException)
+
+```php
+public function test_exception_has_correct_status_code(): void
+{
+    // When
+    $exception = new InvalidTaskTitleException();
+
+    // Then
+    $this->assertEquals(422, $exception->getStatusCode());
+}
+```
+
+**통합 테스트:**
+- 실제 사용 시나리오 기반
+- 여러 컴포넌트 협력 검증
+- 라이프사이클 전체 흐름
+- 예외 처리 시나리오
+
+```php
+public function test_complete_task_lifecycle_from_creation_to_completion(): void
+{
+    // Given
+    $task = Task::create(
+        new TaskTitle('Buy groceries'),
+        new TaskDescription('Milk, eggs')
+    );
+
+    // When & Then - 전체 라이프사이클 검증
+    $this->assertFalse($task->isCompleted());
+
+    $task->complete();
+    $this->assertTrue($task->isCompleted());
+
+    $task->uncomplete();
+    $this->assertFalse($task->isCompleted());
+}
+```
+
+#### 테스트 실행
+```bash
+# 전체 테스트 실행
+composer test
+# 또는
+php artisan test
+
+# 특정 도메인 유닛 테스트
+php artisan test tests/Unit/Domain/Task
+
+# 특정 도메인 통합 테스트
+php artisan test tests/Feature/Domain/Task
+
+# 특정 테스트 파일만 실행
+php artisan test tests/Unit/Domain/Task/Entities/TaskTest.php
+
+# 커버리지 리포트 생성
+php artisan test --coverage
+
+# 특정 테스트 메서드만 실행
+php artisan test --filter test_complete_task_sets_completed_datetime
+```
+
+#### 테스트 작성 시기
+- **TDD 권장**: 도메인 코드 작성 전 테스트 먼저 작성
+- **최소 요구사항**: 도메인 코드와 함께 동일 PR에 테스트 포함
+- **리팩토링 전**: 기존 동작을 보장하는 테스트 먼저 작성
+
+#### 테스트 품질 기준
+- **독립성**: 각 테스트는 독립적으로 실행 가능
+- **반복성**: 동일한 입력은 항상 동일한 결과
+- **명확성**: 테스트 이름과 구조만으로 의도 파악 가능
+- **빠른 실행**: 유닛 테스트는 1초 이내 실행
+
 ## 개발 시 참고사항
 
 - **PHP 버전**: PHP 8.4 이상 필수
