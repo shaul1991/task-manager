@@ -7,7 +7,7 @@
 
     <title>{{ $title ?? 'Task Manager' }}</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/layout.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/layout.js', 'resources/js/task-lists/quickAddTaskList.js'])
 </head>
 <body class="antialiased bg-gray-50">
     <div class="min-h-screen">

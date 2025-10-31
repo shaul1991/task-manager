@@ -52,7 +52,7 @@
 {{--            </div>--}}
 
             <!-- TaskList Items (Scrollable) -->
-            <div class="space-y-1 overflow-y-auto" style="max-height: calc(100vh - 20rem);">
+            <div id="tasklist-items-container" class="space-y-1 overflow-y-auto" style="max-height: calc(100vh - 20rem);">
                 <!-- TaskList Item Example 1 -->
                 <a
                     href="#"
@@ -103,15 +103,19 @@
             </div>
         </div>
 
-        <!-- Add New TaskList Button (Bottom) -->
+        <!-- Quick Add TaskList Form (Bottom) -->
         <div class="border-t border-gray-200 p-4">
-            <button
-                type="button"
-                class="flex w-full items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-                <x-icons.plus class="h-5 w-5" />
-                <span>새 목록 추가</span>
-            </button>
+            <form id="quick-add-tasklist-form" class="flex items-center gap-3">
+                <x-icons.plus class="h-5 w-5 text-gray-400 flex-shrink-0"/>
+                <input
+                    type="text"
+                    id="quick-add-tasklist-input"
+                    name="name"
+                    placeholder="목록 추가"
+                    autocomplete="off"
+                    class="flex-1 border-0 bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 p-0"
+                />
+            </form>
         </div>
     </div>
 </aside>
