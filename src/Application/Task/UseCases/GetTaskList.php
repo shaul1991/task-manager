@@ -22,21 +22,21 @@ final readonly class GetTaskList
     /**
      * Use Case 실행
      *
-     * @param int|null $groupId 그룹 ID 필터 (null이면 필터링 안함)
+     * @param int|null $taskListId TaskList ID 필터 (null이면 필터링 안함)
      * @param bool|null $completed 완료 상태 필터 (null이면 필터링 안함)
      * @param int $limit 조회 개수 제한
      * @param int $offset 오프셋
      * @return TaskListDTO Task 목록 DTO
      */
     public function execute(
-        ?int $groupId = null,
+        ?int $taskListId = null,
         ?bool $completed = null,
         int $limit = 100,
         int $offset = 0
     ): TaskListDTO {
         // Task 목록 조회
         $tasks = $this->taskRepository->findAll(
-            groupId: $groupId,
+            taskListId: $taskListId,
             completed: $completed,
             limit: $limit,
             offset: $offset

@@ -27,7 +27,7 @@
                 </li>
                 <li>
                     <a
-                        href="#"
+                        href="{{ route('tasks.index') }}"
                         class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
                     >
                         <x-icons.clipboard class="h-5 w-5" />

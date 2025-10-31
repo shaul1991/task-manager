@@ -44,5 +44,8 @@
         <!-- Mobile Overlay -->
         <x-layout.overlay />
     </div>
+
+    <!-- Page-specific Scripts -->
+    @stack('scripts')
 </body>
 </html>

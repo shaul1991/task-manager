@@ -14,7 +14,8 @@ final readonly class UpdateTaskDTO
     public function __construct(
         public ?string $title = null,
         public ?string $description = null,
-        public ?int $groupId = null,
+        public ?int $taskListId = null,
+        public ?bool $completed = null,
     ) {
     }
 
@@ -26,7 +27,8 @@ final readonly class UpdateTaskDTO
         return new self(
             title: $data['title'] ?? null,
             description: $data['description'] ?? null,
-            groupId: $data['group_id'] ?? null,
+            taskListId: $data['task_list_id'] ?? null,
+            completed: isset($data['completed']) ? (bool) $data['completed'] : null,
         );
     }
 
@@ -47,10 +49,18 @@ final readonly class UpdateTaskDTO
     }
 
     /**
-     * 그룹 ID 업데이트 여부
+     * TaskList ID 업데이트 여부
      */
-    public function hasGroupIdUpdate(): bool
+    public function hasTaskListIdUpdate(): bool
     {
-        return $this->groupId !== null;
+        return $this->taskListId !== null;
+    }
+
+    /**
+     * 완료 상태 업데이트 여부
+     */
+    public function hasCompletedUpdate(): bool
+    {
+        return $this->completed !== null;
     }
 }

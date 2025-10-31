@@ -55,12 +55,21 @@ final readonly class UpdateTask
             $task->updateDescription(new TaskDescription($dto->description));
         }
 
-        // 그룹 ID 수정
-        if ($dto->hasGroupIdUpdate()) {
-            if ($dto->groupId === null) {
-                $task->removeFromGroup();
+        // TaskList ID 수정
+        if ($dto->hasTaskListIdUpdate()) {
+            if ($dto->taskListId === null) {
+                $task->removeFromTaskList();
             } else {
-                $task->assignToGroup($dto->groupId);
+                $task->assignToTaskList($dto->taskListId);
+            }
+        }
+
+        // 완료 상태 수정
+        if ($dto->hasCompletedUpdate()) {
+            if ($dto->completed) {
+                $task->complete();
+            } else {
+                $task->uncomplete();
             }
         }
 

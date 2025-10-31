@@ -8,7 +8,9 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
-                'resources/js/layout.js'
+                'resources/js/layout.js',
+                'resources/js/tasks/taskForm.js',
+                'resources/js/tasks/taskSlideOver.js'
             ],
             refresh: true,
         }),
