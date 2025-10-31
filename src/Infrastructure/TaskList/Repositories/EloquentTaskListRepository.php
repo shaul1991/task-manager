@@ -112,6 +112,15 @@ final class EloquentTaskListRepository implements TaskListRepositoryInterface
             ]);
     }
 
+    public function orphanTasks(int $taskListId): void
+    {
+        // TaskList에 속한 모든 Task의 task_list_id를 NULL로 설정
+        \DB::table('tasks')
+            ->where('task_list_id', $taskListId)
+            ->whereNull('deleted_at')
+            ->update(['task_list_id' => null]);
+    }
+
     /**
      * Eloquent Model을 Domain Entity로 변환
      */

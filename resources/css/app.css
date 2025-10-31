@@ -94,3 +94,89 @@
     max-height: 2000px; /* 충분히 큰 값 */
     opacity: 1;
 }
+
+/* Dropdown Menu Styles */
+.dropdown-menu {
+    animation: dropdown-fade-in 0.15s ease-out;
+}
+
+.dropdown-menu.show {
+    display: block !important;
+}
+
+@keyframes dropdown-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-item {
+    transition: background-color 0.15s ease;
+}
+
+/* Modal Styles */
+.modal {
+    animation: modal-fade-in 0.2s ease-out;
+}
+
+.modal.show {
+    display: flex !important;
+}
+
+.modal-content {
+    animation: modal-slide-up 0.2s ease-out;
+}
+
+@keyframes modal-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modal-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Modal closing animation */
+.modal.closing {
+    animation: modal-fade-out 0.15s ease-in forwards;
+}
+
+.modal.closing .modal-content {
+    animation: modal-slide-down 0.15s ease-in forwards;
+}
+
+@keyframes modal-fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes modal-slide-down {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(16px) scale(0.95);
+    }
+}

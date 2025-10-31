@@ -85,4 +85,12 @@ interface TaskListRepositoryInterface
      * @return void
      */
     public function moveToGroup(int $id, ?int $taskGroupId, int $order): void;
+
+    /**
+     * TaskList에 속한 모든 Task를 고아 상태(task_list_id = null)로 만듭니다.
+     *
+     * @param int $taskListId TaskList ID
+     * @return void
+     */
+    public function orphanTasks(int $taskListId): void;
 }

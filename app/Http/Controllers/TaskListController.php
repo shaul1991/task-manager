@@ -12,6 +12,7 @@ use Src\Application\Task\UseCases\GetTaskList as GetTaskListTasks;
 use Src\Application\TaskList\DTOs\CreateTaskListDTO;
 use Src\Application\TaskList\DTOs\UpdateTaskListDTO;
 use Src\Application\TaskList\UseCases\CreateTaskList;
+use Src\Application\TaskList\UseCases\DeleteTaskList;
 use Src\Application\TaskList\UseCases\GetTaskList;
 use Src\Application\TaskList\UseCases\GetTaskListList;
 use Src\Application\TaskList\UseCases\UpdateTaskList;
@@ -28,6 +29,7 @@ class TaskListController extends Controller
         private readonly GetTaskList $getTaskList,
         private readonly CreateTaskList $createTaskList,
         private readonly UpdateTaskList $updateTaskList,
+        private readonly DeleteTaskList $deleteTaskList,
         private readonly GetTaskListTasks $getTaskListTasks,
         private readonly UpdateTaskListOrder $updateTaskListOrder,
         private readonly MoveTaskListToGroup $moveTaskListToGroup
@@ -268,6 +270,31 @@ class TaskListController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => '목록 이동 중 오류가 발생했습니다: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove the specified task list from storage.
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        try {
+            $this->deleteTaskList->execute($id);
+
+            return response()->json([
+                'success' => true,
+                'message' => '목록이 성공적으로 삭제되었습니다.',
+            ]);
+        } catch (NotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '목록을 찾을 수 없습니다.',
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '목록 삭제 중 오류가 발생했습니다: ' . $e->getMessage(),
             ], 500);
         }
     }

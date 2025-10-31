@@ -1,14 +1,15 @@
 @props(['taskGroup', 'isExpanded' => false, 'isActive' => false])
 
-<div class="task-group-container" data-task-group-id="{{ $taskGroup->id }}">
-    <!-- TaskGroup Header (Accordion Trigger) -->
-    <button
-        type="button"
-        class="task-group-header flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-gray-700 hover:bg-gray-100 {{ $isActive ? 'bg-blue-50 text-blue-700' : '' }}"
-        data-task-group-toggle="{{ $taskGroup->id }}"
-        aria-expanded="{{ $isExpanded ? 'true' : 'false' }}"
-    >
-        <div class="flex items-center gap-3">
+<div class="task-group-container group" data-task-group-id="{{ $taskGroup->id }}">
+    <!-- TaskGroup Header -->
+    <div class="task-group-header flex w-full items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 {{ $isActive ? 'bg-blue-50 text-blue-700' : '' }}">
+        <!-- Left: Drag + Accordion + Icon + Name -->
+        <button
+            type="button"
+            class="flex flex-1 items-center gap-3 text-left"
+            data-task-group-toggle="{{ $taskGroup->id }}"
+            aria-expanded="{{ $isExpanded ? 'true' : 'false' }}"
+        >
             <!-- Drag Handle Icon -->
             <svg
                 class="drag-handle h-4 w-4 flex-shrink-0"
@@ -37,11 +38,31 @@
 
             <!-- TaskGroup Name -->
             <span class="text-sm font-semibold">{{ $taskGroup->name }}</span>
-        </div>
+        </button>
 
-        <!-- Incomplete Task Count -->
-        <span class="text-xs text-gray-500">{{ $taskGroup->incompleteTaskCount ?? 0 }}</span>
-    </button>
+        <!-- Right: Count + More Button -->
+        <div class="flex items-center gap-2">
+            <!-- Incomplete Task Count -->
+            <span class="text-xs text-gray-500">{{ $taskGroup->incompleteTaskCount ?? 0 }}</span>
+
+            <!-- More Button (⋯) -->
+            <button
+                type="button"
+                class="more-button transition-opacity duration-200
+                       w-6 h-6 flex items-center justify-center
+                       text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded"
+                data-entity-type="taskgroup"
+                data-entity-id="{{ $taskGroup->id }}"
+                data-entity-name="{{ $taskGroup->name }}"
+                aria-label="메뉴 열기"
+                aria-haspopup="true"
+            >
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM10 8.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM11.5 15.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z" />
+                </svg>
+            </button>
+        </div>
+    </div>
 
     <!-- TaskGroup Content (TaskLists) -->
     <div class="task-group-content">

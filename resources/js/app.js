@@ -14,6 +14,9 @@ import './components/task-group/quickAddTaskGroup';
 // Sidebar Drag & Drop
 import './components/sidebar/sidebarDragDrop';
 
+// Sidebar Delete Menu
+import './components/sidebar/deleteMenu';
+
 // Task components
 import './tasks/quickAddTask';
 import './tasks/taskSlideOver';
