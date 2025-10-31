@@ -34,9 +34,11 @@ export const guestTaskGroupStorage = {
      */
     add(taskGroup) {
         const taskGroups = this.getAll();
+        const maxOrder = taskGroups.reduce((max, tg) => Math.max(max, tg.order || 0), -1);
         const newTaskGroup = {
             id: generateUUID(),
             ...taskGroup,
+            order: maxOrder + 1,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
@@ -103,6 +105,24 @@ export const guestTaskGroupStorage = {
         });
 
         localStorage.setItem(taskListKey, JSON.stringify(updatedTaskLists));
+    },
+
+    /**
+     * Update order of multiple TaskGroups
+     */
+    updateOrders(orderMap) {
+        const taskGroups = this.getAll();
+        const updatedTaskGroups = taskGroups.map(tg => {
+            if (orderMap[tg.id] !== undefined) {
+                return {
+                    ...tg,
+                    order: orderMap[tg.id],
+                    updated_at: new Date().toISOString()
+                };
+            }
+            return tg;
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedTaskGroups));
     }
 };
 

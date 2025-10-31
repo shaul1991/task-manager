@@ -34,6 +34,7 @@ class TaskList extends Model
         'description',
         'user_id',
         'task_group_id',
+        'order',
     ];
 
     /**

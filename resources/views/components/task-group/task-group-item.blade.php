@@ -1,4 +1,4 @@
-@props(['taskGroup', 'isExpanded' => true, 'isActive' => false])
+@props(['taskGroup', 'isExpanded' => false, 'isActive' => false])
 
 <div class="task-group-container" data-task-group-id="{{ $taskGroup->id }}">
     <!-- TaskGroup Header (Accordion Trigger) -->
@@ -31,11 +31,11 @@
     </button>
 
     <!-- TaskGroup Content (TaskLists) -->
-    <div
-        class="task-group-content {{ $isExpanded ? '' : 'hidden' }}"
-        data-task-group-content="{{ $taskGroup->id }}"
-    >
-        <div class="ml-6 space-y-1 border-l-2 border-gray-200 pl-3 py-1">
+    <div class="task-group-content">
+        <div
+            class="ml-6 space-y-1 border-l-2 border-gray-200 pl-3 py-1"
+            data-task-group-content="{{ $taskGroup->id }}"
+        >
             {{ $slot }}
         </div>
     </div>

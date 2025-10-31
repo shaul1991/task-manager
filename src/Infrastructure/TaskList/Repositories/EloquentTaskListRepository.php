@@ -62,7 +62,8 @@ final class EloquentTaskListRepository implements TaskListRepositoryInterface
         }
 
         $eloquentTaskLists = $query
-            ->orderBy('created_at', 'desc')
+            ->orderBy('order', 'asc')
+            ->orderBy('created_at', 'asc')
             ->limit($limit)
             ->offset($offset)
             ->get();
@@ -91,6 +92,23 @@ final class EloquentTaskListRepository implements TaskListRepositoryInterface
         }
 
         return $query->count();
+    }
+
+    public function updateOrders(array $orderMap): void
+    {
+        foreach ($orderMap as $taskListId => $order) {
+            TaskListEloquentModel::where('id', $taskListId)
+                ->update(['order' => $order]);
+        }
+    }
+
+    public function moveToGroup(int $id, ?int $taskGroupId, int $order): void
+    {
+        TaskListEloquentModel::where('id', $id)
+            ->update([
+                'task_group_id' => $taskGroupId,
+                'order' => $order,
+            ]);
     }
 
     /**

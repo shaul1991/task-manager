@@ -11,9 +11,13 @@ import './task-lists/editTaskListTitle';
 import './components/task-group/taskGroupList';
 import './components/task-group/quickAddTaskGroup';
 
+// Sidebar Drag & Drop
+import './components/sidebar/sidebarDragDrop';
+
 // Task components
 import './tasks/quickAddTask';
 import './tasks/taskSlideOver';
 
 // Guest mode storage
 import './storage/guestTaskGroupStorage';
+import './storage/guestTaskListStorage';

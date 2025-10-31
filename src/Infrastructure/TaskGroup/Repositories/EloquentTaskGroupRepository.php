@@ -55,7 +55,8 @@ final class EloquentTaskGroupRepository implements TaskGroupRepositoryInterface
     public function findAll(int $limit = 100, int $offset = 0): array
     {
         $models = TaskGroupModel::query()
-            ->orderBy('created_at', 'desc')
+            ->orderBy('order', 'asc')
+            ->orderBy('created_at', 'asc')
             ->limit($limit)
             ->offset($offset)
             ->get();
@@ -95,6 +96,17 @@ final class EloquentTaskGroupRepository implements TaskGroupRepositoryInterface
     {
         TaskListModel::where('task_group_id', $taskGroupId)
             ->update(['task_group_id' => null]);
+    }
+
+    /**
+     * Update order of multiple TaskGroups
+     */
+    public function updateOrders(array $orderMap): void
+    {
+        foreach ($orderMap as $taskGroupId => $order) {
+            TaskGroupModel::where('id', $taskGroupId)
+                ->update(['order' => $order]);
+        }
     }
 
     /**

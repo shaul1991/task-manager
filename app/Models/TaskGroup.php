@@ -14,6 +14,7 @@ class TaskGroup extends Model
 
     protected $fillable = [
         'name',
+        'order',
     ];
 
     protected function casts(): array

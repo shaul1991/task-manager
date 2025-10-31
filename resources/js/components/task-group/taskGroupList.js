@@ -11,17 +11,27 @@ function initTaskGroupAccordion() {
 
     taskGroupToggles.forEach(toggle => {
         const taskGroupId = toggle.getAttribute('data-task-group-toggle');
-        const content = document.querySelector(`[data-task-group-content="${taskGroupId}"]`);
+        const contentWrapper = document.querySelector(`[data-task-group-content="${taskGroupId}"]`);
         const chevron = toggle.querySelector('.task-group-chevron');
 
-        if (!content || !chevron) return;
+        if (!contentWrapper || !chevron) return;
+
+        // content의 부모 요소 (실제로 hidden 클래스가 적용되는 요소)
+        const content = contentWrapper.parentElement;
 
         // Load saved state from localStorage
         const savedState = localStorage.getItem(`taskgroup_${taskGroupId}_collapsed`);
-        const isCollapsed = savedState === 'true';
 
-        if (isCollapsed) {
-            content.classList.add('hidden');
+        // 기본값은 접힌 상태
+        // localStorage에 명시적으로 'false'(펼침)로 저장된 경우만 펼침
+        if (savedState === 'false') {
+            // Expand
+            content.classList.add('expanded');
+            chevron.classList.add('rotate-90');
+            toggle.setAttribute('aria-expanded', 'true');
+        } else {
+            // Collapsed (기본 상태 유지)
+            content.classList.remove('expanded');
             chevron.classList.remove('rotate-90');
             toggle.setAttribute('aria-expanded', 'false');
         }
@@ -33,14 +43,14 @@ function initTaskGroupAccordion() {
             const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
 
             if (isExpanded) {
-                // Collapse
-                content.classList.add('hidden');
+                // Collapse with slide animation
+                content.classList.remove('expanded');
                 chevron.classList.remove('rotate-90');
                 toggle.setAttribute('aria-expanded', 'false');
                 localStorage.setItem(`taskgroup_${taskGroupId}_collapsed`, 'true');
             } else {
-                // Expand
-                content.classList.remove('hidden');
+                // Expand with slide animation
+                content.classList.add('expanded');
                 chevron.classList.add('rotate-90');
                 toggle.setAttribute('aria-expanded', 'true');
                 localStorage.setItem(`taskgroup_${taskGroupId}_collapsed`, 'false');

@@ -67,4 +67,22 @@ interface TaskListRepositoryInterface
      * @return int TaskList 개수
      */
     public function countByUserId(?int $userId): int;
+
+    /**
+     * 복수 TaskList의 순서를 업데이트합니다.
+     *
+     * @param array<int, int> $orderMap [taskListId => order]
+     * @return void
+     */
+    public function updateOrders(array $orderMap): void;
+
+    /**
+     * TaskList를 다른 그룹으로 이동시킵니다.
+     *
+     * @param int $id TaskList ID
+     * @param int|null $taskGroupId 이동할 TaskGroup ID (null이면 ungrouped)
+     * @param int $order 새로운 순서
+     * @return void
+     */
+    public function moveToGroup(int $id, ?int $taskGroupId, int $order): void;
 }

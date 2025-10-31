@@ -10,8 +10,10 @@ use Src\Application\TaskGroup\UseCases\CreateTaskGroup;
 use Src\Application\TaskGroup\UseCases\UpdateTaskGroup;
 use Src\Application\TaskGroup\UseCases\DeleteTaskGroup;
 use Src\Application\TaskGroup\UseCases\GetTaskGroupList;
+use Src\Application\TaskGroup\UseCases\UpdateTaskGroupOrder;
 use Src\Application\TaskGroup\DTOs\CreateTaskGroupDTO;
 use Src\Application\TaskGroup\DTOs\UpdateTaskGroupDTO;
+use Src\Application\TaskGroup\DTOs\UpdateTaskGroupOrderDTO;
 
 /**
  * TaskGroup Controller
@@ -24,7 +26,8 @@ class TaskGroupController extends Controller
         private readonly CreateTaskGroup $createTaskGroup,
         private readonly UpdateTaskGroup $updateTaskGroup,
         private readonly DeleteTaskGroup $deleteTaskGroup,
-        private readonly GetTaskGroupList $getTaskGroupList
+        private readonly GetTaskGroupList $getTaskGroupList,
+        private readonly UpdateTaskGroupOrder $updateTaskGroupOrder
     ) {
     }
 
@@ -135,6 +138,40 @@ class TaskGroupController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'TaskGroup deleted successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Reorder TaskGroups
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function reorder(Request $request): JsonResponse
+    {
+        try {
+            // Validate input
+            $validated = $request->validate([
+                'items' => 'required|array',
+                'items.*.id' => 'required|integer',
+                'items.*.order' => 'required|integer',
+            ]);
+
+            // Create DTO
+            $dto = UpdateTaskGroupOrderDTO::fromArray($validated['items']);
+
+            // Execute use case
+            $this->updateTaskGroupOrder->execute($dto);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'TaskGroup order updated successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([

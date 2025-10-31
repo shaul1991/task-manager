@@ -69,4 +69,12 @@ interface TaskGroupRepositoryInterface
      * @return void
      */
     public function unassignTaskListsFromGroup(int $taskGroupId): void;
+
+    /**
+     * Update order of multiple TaskGroups
+     *
+     * @param array<int, int> $orderMap [taskGroupId => order]
+     * @return void
+     */
+    public function updateOrders(array $orderMap): void;
 }

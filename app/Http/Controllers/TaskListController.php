@@ -6,6 +6,7 @@ use App\Http\Requests\StoreTaskListRequest;
 use App\Http\Requests\UpdateTaskListRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Src\Application\Task\UseCases\GetTaskList as GetTaskListTasks;
 use Src\Application\TaskList\DTOs\CreateTaskListDTO;
@@ -14,6 +15,10 @@ use Src\Application\TaskList\UseCases\CreateTaskList;
 use Src\Application\TaskList\UseCases\GetTaskList;
 use Src\Application\TaskList\UseCases\GetTaskListList;
 use Src\Application\TaskList\UseCases\UpdateTaskList;
+use Src\Application\TaskList\UseCases\UpdateTaskListOrder;
+use Src\Application\TaskList\UseCases\MoveTaskListToGroup;
+use Src\Application\TaskList\DTOs\UpdateTaskListOrderDTO;
+use Src\Application\TaskList\DTOs\MoveTaskListToGroupDTO;
 use Src\Shared\Exceptions\NotFoundException;
 
 class TaskListController extends Controller
@@ -23,7 +28,9 @@ class TaskListController extends Controller
         private readonly GetTaskList $getTaskList,
         private readonly CreateTaskList $createTaskList,
         private readonly UpdateTaskList $updateTaskList,
-        private readonly GetTaskListTasks $getTaskListTasks
+        private readonly GetTaskListTasks $getTaskListTasks,
+        private readonly UpdateTaskListOrder $updateTaskListOrder,
+        private readonly MoveTaskListToGroup $moveTaskListToGroup
     ) {
     }
 
@@ -168,6 +175,76 @@ class TaskListController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => '목록 수정 중 오류가 발생했습니다: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Reorder TaskLists
+     */
+    public function reorder(Request $request): JsonResponse
+    {
+        try {
+            // Validate input
+            $validated = $request->validate([
+                'items' => 'required|array',
+                'items.*.id' => 'required|integer',
+                'items.*.order' => 'required|integer',
+            ]);
+
+            // Create DTO
+            $dto = UpdateTaskListOrderDTO::fromArray($validated['items']);
+
+            // Execute use case
+            $this->updateTaskListOrder->execute($dto);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'TaskList order updated successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '순서 변경 중 오류가 발생했습니다: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Move TaskList to different TaskGroup
+     */
+    public function move(Request $request, int $id): JsonResponse
+    {
+        try {
+            // Validate input
+            $validated = $request->validate([
+                'task_group_id' => 'nullable|integer',
+                'order' => 'required|integer',
+            ]);
+
+            // Create DTO
+            $dto = new MoveTaskListToGroupDTO(
+                taskListId: $id,
+                taskGroupId: $validated['task_group_id'] ?? null,
+                order: $validated['order']
+            );
+
+            // Execute use case
+            $this->moveTaskListToGroup->execute($dto);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'TaskList moved successfully',
+            ]);
+        } catch (NotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '목록을 찾을 수 없습니다.',
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '목록 이동 중 오류가 발생했습니다: ' . $e->getMessage(),
             ], 500);
         }
     }

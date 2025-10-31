@@ -9,3 +9,38 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Drag & Drop Styles */
+.sortable-ghost {
+    opacity: 0.4;
+    background: #f3f4f6;
+}
+
+.sortable-drag {
+    opacity: 1;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    cursor: grabbing !important;
+}
+
+.task-group-header:hover,
+[data-tasklist-id]:hover {
+    cursor: grab;
+}
+
+.task-group-header:active,
+[data-tasklist-id]:active {
+    cursor: grabbing;
+}
+
+/* TaskGroup Accordion Slide Animation */
+.task-group-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    max-height: 0;
+    opacity: 0;
+}
+
+.task-group-content.expanded {
+    max-height: 2000px; /* 충분히 큰 값 */
+    opacity: 1;
+}
