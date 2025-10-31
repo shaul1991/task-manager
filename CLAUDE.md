@@ -458,6 +458,130 @@ Laravel 12.0의 기본 헬스체크 엔드포인트 `/up`이 자동으로 등록
   - 모든 외래키 컬럼에 `comment('{table_name}.{key}')` 추가 필수
   - 상세 규칙은 @BACKEND.md의 "외래키 규칙" 섹션 참조
 
+## Git Commit Message 가이드
+
+이 프로젝트는 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) 규칙을 따릅니다.
+
+### 목적
+
+PR 리뷰와 릴리스 노트 생성을 쉽게 하기 위해 커밋 메시지를 명확하고 일관되게 작성합니다.
+
+### 언어 규칙
+
+**커밋 메시지는 한글로 작성합니다:**
+- `<type>`: 영문 소문자 (feat, fix, refactor 등)
+- `<description>`: **한글** (필수)
+- `[optional body]`: **한글** (선택)
+- `[optional footer(s)]`: **한글** 또는 영문 (선택)
+
+### 커밋 메시지 형식
+
+```
+<type>: <한글 description>
+
+[optional 한글 body]
+
+[optional footer(s)]
+```
+
+**예시:**
+```
+feat: TaskList 생성 기능 추가
+
+사이드바에 Quick Add Form을 구현하여 TaskList를 즉시 생성할 수 있도록 함.
+AJAX 기반으로 페이지 새로고침 없이 즉시 반영됨.
+
+🤖 Generated with Claude Code
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+### Type 종류
+
+- **`feat`**: 새로운 기능 추가
+- **`fix`**: 버그 수정
+- **`refactor`**: 코드 리팩토링 (기능 변경 없음)
+- **`test`**: 테스트 코드 추가/수정
+- **`docs`**: 문서 수정
+- **`style`**: 코드 스타일 변경 (포맷팅, 세미콜론 등)
+- **`chore`**: 빌드 프로세스, 의존성 업데이트 등
+- **`deprecate`**: 기능 deprecation
+- **`release`**: 버전 릴리스
+
+### Breaking Changes (중대한 변경)
+
+중대한 변경사항이 있는 경우 type 뒤에 `!`를 추가합니다.
+
+```
+feat!: Task Entity의 groupId를 taskListId로 변경
+
+기존 groupId 필드를 taskListId로 마이그레이션.
+기존 코드에서 groupId를 사용하는 경우 수정 필요.
+```
+
+### 규칙
+
+1. **Type**: 소문자, 필수, 256자 이내
+2. **Description**: 필수, 256자 이내
+3. **Body**: 선택, 각 줄 256자 이내, description과 한 줄 띄우기
+4. **Footer**: 선택, 각 줄 256자 이내, body와 한 줄 띄우기
+
+### 예시
+
+**기능 추가:**
+```
+feat: TaskList Quick Add Form 구현
+
+사이드바에 인라인 TaskList 생성 폼 추가
+AJAX를 통한 즉시 생성 및 DOM 업데이트
+```
+
+**버그 수정:**
+```
+fix: TaskList 목록 조회 시 NULL 예외 처리
+
+게스트 모드에서 taskLists 변수가 NULL일 때 발생하는 오류 수정
+```
+
+**리팩토링:**
+```
+refactor: TaskList 아이콘을 Font Awesome으로 교체
+
+색상 기반 식별을 아이콘 기반으로 변경하여 접근성 향상
+```
+
+**테스트:**
+```
+test: TaskList 도메인 레이어 유닛 테스트 추가
+
+TaskList Entity, Value Objects, Exceptions 테스트 커버리지 80% 달성
+```
+
+### Pull Request 제목
+
+PR이 여러 커밋을 포함하는 경우, PR 제목도 Conventional Commits 형식을 따라야 합니다. PR이 merge될 때 squash되면서 PR 제목이 최종 커밋 메시지가 됩니다.
+
+### 커밋 메시지 수정
+
+잘못된 커밋 메시지를 수정하는 방법:
+
+**1. 최근 커밋 수정:**
+```bash
+git commit --amend
+```
+
+**2. 여러 커밋 수정 (interactive rebase):**
+```bash
+git rebase -i HEAD~3  # 최근 3개 커밋 수정
+```
+
+**3. 수정 후 강제 푸시 (주의!):**
+```bash
+git push --force origin my-branch
+```
+
+**주의**: 이미 push된 커밋을 수정하면 협업 중인 경우 문제가 발생할 수 있습니다.
+
 ## 상세 개발 가이드
 
 **백엔드 개발**: @BACKEND.md 참조
