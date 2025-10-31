@@ -14,7 +14,7 @@
 
             <!-- Logo / App Name -->
             <a href="{{ route('main') }}" class="flex items-center gap-2">
-                <x-icons.clipboard-check class="w-8 h-8 text-blue-600" />
+                <x-icons.database class="w-10 h-10 text-blue-800" />
                 <span class="text-xl font-bold text-gray-900 hidden sm:block">Task Manager</span>
             </a>
         </div>
