@@ -1,0 +1,30 @@
+@props(['taskGroups' => [], 'activeTaskGroupId' => null])
+
+<div id="task-group-list-container" class="space-y-2">
+    @forelse($taskGroups as $taskGroup)
+        <x-task-group.task-group-item
+            :taskGroup="$taskGroup"
+            :isExpanded="true"
+            :isActive="$activeTaskGroupId === $taskGroup->id"
+        >
+            {{-- TaskLists will be inserted here by parent component --}}
+            @if(isset($taskGroup->taskLists) && $taskGroup->taskLists->isNotEmpty())
+                @foreach($taskGroup->taskLists as $taskList)
+                    <a
+                        href="{{ route('task-lists.show', $taskList->id) }}"
+                        class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 {{ request()->route('task_list') == $taskList->id ? 'bg-blue-50 text-blue-700' : '' }}"
+                        data-tasklist-id="{{ $taskList->id }}"
+                    >
+                        <div class="flex items-center gap-3">
+                            <x-icons.task_list class="h-4 w-4 {{ request()->route('task_list') == $taskList->id ? 'text-blue-600' : 'text-gray-500' }}" />
+                            <span class="text-sm font-medium">{{ $taskList->name }}</span>
+                        </div>
+                        <span class="text-xs text-gray-500">{{ $taskList->incompleteTaskCount ?? 0 }}</span>
+                    </a>
+                @endforeach
+            @endif
+        </x-task-group.task-group-item>
+    @empty
+        {{-- No TaskGroups --}}
+    @endforelse
+</div>

@@ -2,9 +2,9 @@
 
 namespace App\Providers;
 
+use App\View\Composers\SidebarComposer;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
-use Src\Application\TaskList\UseCases\GetTaskListList;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,11 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Sidebar에 TaskList 목록 자동 전달
-        View::composer('components.layout.sidebar', function ($view) {
-            $getTaskListList = app(GetTaskListList::class);
-            $result = $getTaskListList->execute(userId: null); // 게스트 모드
-            $view->with('taskLists', $result->taskLists);
-        });
+        // Sidebar에 TaskGroup 및 TaskList 목록 자동 전달
+        View::composer('components.layout.sidebar', SidebarComposer::class);
     }
 }

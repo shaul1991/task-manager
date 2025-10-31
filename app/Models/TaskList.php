@@ -33,6 +33,7 @@ class TaskList extends Model
         'name',
         'description',
         'user_id',
+        'task_group_id',
     ];
 
     /**
@@ -52,4 +53,20 @@ class TaskList extends Model
      * @var bool
      */
     public $timestamps = true;
+
+    /**
+     * TaskList belongs to TaskGroup
+     */
+    public function taskGroup()
+    {
+        return $this->belongsTo(TaskGroup::class, 'task_group_id');
+    }
+
+    /**
+     * TaskList has many Tasks
+     */
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'task_list_id');
+    }
 }

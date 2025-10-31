@@ -37,41 +37,68 @@
             </ul>
         </nav>
 
-        <!-- TaskList Section -->
+        <!-- TaskGroup & TaskList Section (Scrollable) -->
         <div class="flex-1 overflow-hidden p-4">
-{{--            <!-- Section Header -->--}}
-{{--            <div class="mb-4 flex items-center justify-between">--}}
-{{--                <h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500">내 목록</h3>--}}
-{{--                <button--}}
-{{--                    type="button"--}}
-{{--                    class="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"--}}
-{{--                    aria-label="새 목록 추가"--}}
-{{--                >--}}
-{{--                    <x-icons.plus class="h-5 w-5" />--}}
-{{--                </button>--}}
-{{--            </div>--}}
+            <div id="sidebar-content-container" class="space-y-2 overflow-y-auto" style="max-height: calc(100vh - 24rem);">
+                <!-- TaskGroups with nested TaskLists -->
+                @if(isset($taskGroups) && count($taskGroups) > 0)
+                    <x-task-group.task-group-list
+                        :taskGroups="$taskGroups"
+                        :activeTaskGroupId="null"
+                    />
+                @endif
 
-            <!-- TaskList Items (Scrollable) -->
-            <div id="tasklist-items-container" class="space-y-1 overflow-y-auto" style="max-height: calc(100vh - 20rem);">
-                @forelse($taskLists ?? [] as $taskList)
-                    <a
-                        href="{{ route('task-lists.show', $taskList->id) }}"
-                        class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 {{ request()->route('task_list') == $taskList->id ? 'bg-blue-50 text-blue-700' : '' }}"
-                        data-tasklist-id="{{ $taskList->id }}"
-                    >
-                        <div class="flex items-center gap-3">
-                            <x-icons.task_list class="h-4 w-4 {{ request()->route('task_list') == $taskList->id ? 'text-blue-600' : 'text-gray-500' }}" />
-                            <span class="text-sm font-medium">{{ $taskList->name }}</span>
+                <!-- Ungrouped TaskLists -->
+                @if(isset($ungroupedTaskLists) && count($ungroupedTaskLists) > 0)
+                    <div class="ungrouped-tasklists mt-4">
+                        <h4 class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                            모든 목록
+                        </h4>
+                        <div id="ungrouped-tasklist-items-container" class="space-y-1">
+                            @foreach($ungroupedTaskLists as $taskList)
+                                <a
+                                    href="{{ route('task-lists.show', $taskList->id) }}"
+                                    class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 {{ request()->route('task_list') == $taskList->id ? 'bg-blue-50 text-blue-700' : '' }}"
+                                    data-tasklist-id="{{ $taskList->id }}"
+                                >
+                                    <div class="flex items-center gap-3">
+                                        <x-icons.task_list class="h-4 w-4 {{ request()->route('task_list') == $taskList->id ? 'text-blue-600' : 'text-gray-500' }}" />
+                                        <span class="text-sm font-medium">{{ $taskList->name }}</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">{{ $taskList->incompleteTaskCount ?? 0 }}</span>
+                                </a>
+                            @endforeach
                         </div>
-                        <span class="text-xs text-gray-500">{{ $taskList->incompleteTaskCount }}</span>
-                    </a>
-                @empty
-                    <!-- 목록이 없을 때는 아무것도 표시하지 않음 -->
-                @endforelse
+                    </div>
+                @endif
+
+                <!-- Fallback: All TaskLists (if $taskGroups not provided) -->
+                @if(!isset($taskGroups) && isset($taskLists))
+                    <div id="tasklist-items-container" class="space-y-1">
+                        @forelse($taskLists as $taskList)
+                            <a
+                                href="{{ route('task-lists.show', $taskList->id) }}"
+                                class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 {{ request()->route('task_list') == $taskList->id ? 'bg-blue-50 text-blue-700' : '' }}"
+                                data-tasklist-id="{{ $taskList->id }}"
+                            >
+                                <div class="flex items-center gap-3">
+                                    <x-icons.task_list class="h-4 w-4 {{ request()->route('task_list') == $taskList->id ? 'text-blue-600' : 'text-gray-500' }}" />
+                                    <span class="text-sm font-medium">{{ $taskList->name }}</span>
+                                </div>
+                                <span class="text-xs text-gray-500">{{ $taskList->incompleteTaskCount ?? 0 }}</span>
+                            </a>
+                        @empty
+                            <!-- 목록이 없을 때는 아무것도 표시하지 않음 -->
+                        @endforelse
+                    </div>
+                @endif
             </div>
         </div>
 
-        <!-- Quick Add TaskList Form (Bottom) -->
+        <!-- Quick Add TaskGroup Form -->
+        <x-task-group.task-group-form />
+
+        <!-- Quick Add TaskList Form -->
         <div class="border-t border-gray-200 p-4">
             <form id="quick-add-tasklist-form" class="flex items-center gap-3">
                 <x-icons.plus class="h-5 w-5 text-gray-400 flex-shrink-0"/>

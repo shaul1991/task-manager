@@ -60,18 +60,25 @@ async function quickAddTaskList(name) {
  * Add task list to the sidebar DOM
  */
 function addTaskListToSidebar(taskList) {
-    // Find the task list container
-    const taskListContainer = document.getElementById('tasklist-items-container');
+    // Find the ungrouped task list container (미분류 목록 영역)
+    let taskListContainer = document.getElementById('ungrouped-tasklist-items-container');
+
+    // Fallback: 구버전 호환성을 위해 기존 컨테이너도 확인
+    if (!taskListContainer) {
+        taskListContainer = document.getElementById('tasklist-items-container');
+    }
 
     if (!taskListContainer) {
         console.error('TaskList container not found');
+        // 페이지 새로고침으로 대체
+        window.location.reload();
         return;
     }
 
     // Create task list item HTML
     const taskListItemHtml = `
         <a
-            href="#"
+            href="${window.location.origin}/task-lists/${taskList.id}"
             class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
             data-tasklist-id="${taskList.id}"
         >
