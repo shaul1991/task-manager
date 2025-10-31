@@ -12,10 +12,8 @@
                         href="#"
                         class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
                     >
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
-                        <span class="font-medium">전체 할 일</span>
+                        <x-icons.calendar class="h-5 w-5" />
+                        <span class="font-medium">오늘 할 일</span>
                     </a>
                 </li>
                 <li>
@@ -23,10 +21,17 @@
                         href="#"
                         class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
                     >
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span class="font-medium">완료된 할 일</span>
+                        <x-icons.star class="h-5 w-5" />
+                        <span class="font-medium">중요한 일</span>
+                    </a>
+                </li>
+                <li>
+                    <a
+                        href="#"
+                        class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
+                    >
+                        <x-icons.clipboard class="h-5 w-5" />
+                        <span class="font-medium">전체 할 일</span>
                     </a>
                 </li>
             </ul>
@@ -34,19 +39,17 @@
 
         <!-- TaskList Section -->
         <div class="flex-1 overflow-hidden p-4">
-            <!-- Section Header -->
-            <div class="mb-4 flex items-center justify-between">
-                <h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500">내 목록</h3>
-                <button
-                    type="button"
-                    class="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                    aria-label="새 목록 추가"
-                >
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                </button>
-            </div>
+{{--            <!-- Section Header -->--}}
+{{--            <div class="mb-4 flex items-center justify-between">--}}
+{{--                <h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500">내 목록</h3>--}}
+{{--                <button--}}
+{{--                    type="button"--}}
+{{--                    class="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"--}}
+{{--                    aria-label="새 목록 추가"--}}
+{{--                >--}}
+{{--                    <x-icons.plus class="h-5 w-5" />--}}
+{{--                </button>--}}
+{{--            </div>--}}
 
             <!-- TaskList Items (Scrollable) -->
             <div class="space-y-1 overflow-y-auto" style="max-height: calc(100vh - 20rem);">
@@ -106,9 +109,7 @@
                 type="button"
                 class="flex w-full items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
+                <x-icons.plus class="h-5 w-5" />
                 <span>새 목록 추가</span>
             </button>
         </div>
