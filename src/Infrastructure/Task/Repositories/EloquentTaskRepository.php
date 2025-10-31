@@ -59,6 +59,9 @@ final class EloquentTaskRepository implements TaskRepositoryInterface
     ): array {
         $query = TaskEloquentModel::query();
 
+        // Eager load taskList relationship
+        $query->with('taskList');
+
         // TaskList ID 필터
         if ($taskListId !== null) {
             $query->where('task_list_id', $taskListId);
@@ -129,6 +132,49 @@ final class EloquentTaskRepository implements TaskRepositoryInterface
             })
             ->whereNull('completed_datetime')
             ->count();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function findAllWithTaskListName(
+        ?int $taskListId = null,
+        ?bool $completed = null,
+        int $limit = 100,
+        int $offset = 0
+    ): array {
+        $query = TaskEloquentModel::query();
+
+        // Eager load taskList relationship
+        $query->with('taskList');
+
+        // TaskList ID 필터
+        if ($taskListId !== null) {
+            $query->where('task_list_id', $taskListId);
+        }
+
+        // 완료 상태 필터
+        if ($completed !== null) {
+            if ($completed) {
+                $query->whereNotNull('completed_datetime');
+            } else {
+                $query->whereNull('completed_datetime');
+            }
+        }
+
+        // 정렬: 최신순
+        $query->orderBy('created_at', 'desc');
+
+        // 페이지네이션
+        $query->limit($limit)->offset($offset);
+
+        // Eloquent 모델을 Domain Entity + TaskList 이름으로 변환
+        return $query->get()->map(function (TaskEloquentModel $eloquentTask) {
+            return [
+                'task' => $this->toDomain($eloquentTask),
+                'taskListName' => $eloquentTask->taskList?->name,
+            ];
+        })->all();
     }
 
     /**

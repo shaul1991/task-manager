@@ -93,4 +93,22 @@ interface TaskRepositoryInterface
      * @return int 미완료 Task 개수
      */
     public function countIncompleteByTaskGroupId(int $taskGroupId): int;
+
+    /**
+     * TaskList 이름 정보를 포함한 Task 목록을 조회합니다.
+     *
+     * Application Layer에서 TaskDTO 생성 시 TaskList 이름을 포함하기 위해 사용됩니다.
+     *
+     * @param int|null $taskListId TaskList ID 필터 (null이면 필터링 안함)
+     * @param bool|null $completed 완료 상태 필터 (null이면 필터링 안함)
+     * @param int $limit 조회 개수 제한 (기본값: 100)
+     * @param int $offset 오프셋 (기본값: 0)
+     * @return array<array{task: Task, taskListName: string|null}> Task 엔티티와 TaskList 이름 배열
+     */
+    public function findAllWithTaskListName(
+        ?int $taskListId = null,
+        ?bool $completed = null,
+        int $limit = 100,
+        int $offset = 0
+    ): array;
 }

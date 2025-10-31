@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Src\Application\Task\UseCases;
 
+use Src\Application\Task\DTOs\TaskDTO;
 use Src\Application\Task\DTOs\TaskListDTO;
 use Src\Domain\Task\Repositories\TaskRepositoryInterface;
 
@@ -34,22 +35,26 @@ final readonly class GetTaskList
         int $limit = 100,
         int $offset = 0
     ): TaskListDTO {
-        // Task 목록 조회
-        $tasks = $this->taskRepository->findAll(
+        // TaskList 이름을 포함한 Task 목록 조회
+        $tasksWithTaskListName = $this->taskRepository->findAllWithTaskListName(
             taskListId: $taskListId,
             completed: $completed,
             limit: $limit,
             offset: $offset
         );
 
-        // 전체 개수 조회 (필터링 적용)
-        // Note: 실제로는 Repository에 count 메서드를 추가하거나,
-        // 별도 쿼리로 total을 조회해야 하지만, 지금은 간단히 현재 결과 개수 사용
-        $total = count($tasks);
+        // Domain Entity → DTO 변환 (taskListName 포함)
+        $taskDTOs = array_map(
+            fn(array $item) => TaskDTO::fromEntity($item['task'], $item['taskListName']),
+            $tasksWithTaskListName
+        );
 
-        // DTO로 변환하여 반환
-        return TaskListDTO::fromEntities(
-            tasks: $tasks,
+        // 전체 개수 조회
+        $total = count($taskDTOs);
+
+        // TaskListDTO 생성
+        return new TaskListDTO(
+            tasks: $taskDTOs,
             total: $total,
             limit: $limit,
             offset: $offset
