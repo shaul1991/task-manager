@@ -14,32 +14,41 @@
         <!-- Fixed Header -->
         <x-layout.header />
 
-        <!-- Flex Container for Sidebar and Main -->
+        <!-- Flex Container for Sidebar, Main, and Right Sidebar -->
         <div class="flex pt-16">
-            <!-- Sidebar (PC: fixed, Mobile: slide) -->
+            <!-- Left Sidebar (PC: fixed, Mobile: slide) -->
             <x-layout.sidebar />
 
             <!-- Main Contents -->
-            <main class="flex-1 sm:ml-64">
-                <div class="p-6">
-                    <!-- Page Title (optional) -->
-                    @isset($pageTitle)
-                        <div class="mb-6">
-                            <h1 class="text-3xl font-bold text-gray-900">{{ $pageTitle }}</h1>
-                            @isset($pageDescription)
-                                <p class="mt-2 text-gray-600">{{ $pageDescription }}</p>
-                            @endisset
-                        </div>
-                    @endisset
+            <main class="flex-1 sm:ml-64 flex flex-col h-[calc(100vh-4rem)]">
+                <div class="flex-1 flex flex-col overflow-hidden">
+                    <div class="flex-1 flex overflow-hidden">
+                        <!-- Main Content Area -->
+                        <div id="main-content" class="flex-1 flex flex-col overflow-hidden">
+                            <!-- Main Header (고정 영역) -->
+                            @isset($mainHeader)
+                                <div class="flex-shrink-0 p-6 pb-0">
+                                    {{ $mainHeader }}
+                                </div>
+                            @endif
 
-                    <!-- Main Content -->
-                    {{ $slot }}
+                            <!-- Main Body (스크롤 가능 영역) -->
+                            <div class="flex-1 overflow-y-auto p-6">
+                                {{ $slot }}
+                            </div>
+                        </div>
+
+                        <!-- Right Sidebar (토글 가능) -->
+                        @isset($rightSidebar)
+                            {{ $rightSidebar }}
+                        @endisset
+                    </div>
                 </div>
             </main>
         </div>
 
-        <!-- Footer -->
-        <x-layout.footer class="sm:ml-64" />
+        <!-- Footer (Hidden - Quick Add UI replaces footer area) -->
+        <x-layout.footer class="hidden sm:ml-64" />
 
         <!-- Mobile Overlay -->
         <x-layout.overlay />

@@ -10,7 +10,8 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/js/layout.js',
                 'resources/js/tasks/taskForm.js',
-                'resources/js/tasks/taskSlideOver.js'
+                'resources/js/tasks/taskSlideOver.js',
+                'resources/js/tasks/quickAddTask.js'
             ],
             refresh: true,
         }),

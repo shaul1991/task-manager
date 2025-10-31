@@ -46,6 +46,12 @@ function openDesktopPanel() {
     rightPanel.classList.remove('md:w-0');
     rightPanel.classList.add('md:w-[30vw]');
 
+    // Adjust Quick Add Task bar width
+    const quickAddBar = document.getElementById('quick-add-task-bar');
+    if (quickAddBar) {
+        quickAddBar.style.right = '30vw';
+    }
+
     // Add click listener to main content (with delay to prevent immediate close)
     setTimeout(() => {
         mainContentClickHandler = function(e) {
@@ -75,6 +81,12 @@ function closeDesktopPanel() {
     // Animate panel out
     rightPanel.classList.remove('md:w-[30vw]');
     rightPanel.classList.add('md:w-0');
+
+    // Restore Quick Add Task bar width
+    const quickAddBar = document.getElementById('quick-add-task-bar');
+    if (quickAddBar) {
+        quickAddBar.style.right = '0';
+    }
 
     // Remove click listener from main content
     if (mainContentClickHandler) {
@@ -154,7 +166,7 @@ function showSaveStatus(status) {
  */
 function getActiveContainer() {
     if (isMobile()) {
-        return document.querySelector('#task-detail-modal-mobile');
+        return document.querySelector('#right-panel-mobile');
     } else {
         return document.querySelector('#right-panel-content');
     }
@@ -220,7 +232,7 @@ async function loadTaskData(taskId) {
 
         // Close based on mode
         if (isMobile()) {
-            window.slideOver.close('task-detail-modal-mobile');
+            window.slideOver.close('right-panel-mobile');
         } else {
             closeDesktopPanel();
         }
@@ -344,7 +356,7 @@ async function deleteTask(taskId) {
         if (response.data.success) {
             // Close based on mode
             if (isMobile()) {
-                window.slideOver.close('task-detail-modal-mobile');
+                window.slideOver.close('right-panel-mobile');
             } else {
                 closeDesktopPanel();
             }
@@ -459,15 +471,15 @@ function initTaskSlideOver() {
     if (desktopContainer) {
         initContainerEventListeners(desktopContainer);
 
-        // Desktop panel close button
-        const desktopCloseBtn = document.getElementById('desktop-panel-close');
+        // Desktop panel close button (data-close-sidebar attribute)
+        const desktopCloseBtn = desktopContainer.querySelector('[data-close-sidebar="right-panel"]');
         if (desktopCloseBtn) {
             desktopCloseBtn.addEventListener('click', closeDesktopPanel);
         }
     }
 
     // Initialize mobile modal event listeners
-    const mobileContainer = document.querySelector('#task-detail-modal-mobile');
+    const mobileContainer = document.querySelector('#right-panel-mobile');
     if (mobileContainer) {
         initContainerEventListeners(mobileContainer);
     }
@@ -482,7 +494,7 @@ window.openTaskDetail = function (taskId) {
     // Determine mode and open accordingly
     if (isMobile()) {
         // Mobile: Open full overlay modal
-        window.slideOver.open('task-detail-modal-mobile');
+        window.slideOver.open('right-panel-mobile');
     } else {
         // Desktop: Open right panel
         openDesktopPanel();

@@ -52,17 +52,41 @@ class TaskController extends Controller
     /**
      * Store a newly created task in storage.
      */
-    public function store(StoreTaskRequest $request): RedirectResponse
+    public function store(StoreTaskRequest $request): RedirectResponse|JsonResponse
     {
         try {
             $dto = CreateTaskDTO::fromArray($request->validated());
 
-            $this->createTask->execute($dto);
+            $taskDto = $this->createTask->execute($dto);
 
+            // JSON response for AJAX requests
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => '할 일이 성공적으로 생성되었습니다.',
+                    'task' => [
+                        'id' => $taskDto->id,
+                        'title' => $taskDto->title,
+                        'description' => $taskDto->description,
+                        'completed' => $taskDto->isCompleted,
+                        'created_at' => $taskDto->createdAt,
+                        'updated_at' => $taskDto->updatedAt,
+                    ],
+                ], 201);
+            }
+
+            // Redirect response for form submissions
             return redirect()
                 ->route('tasks.index')
                 ->with('success', '할 일이 성공적으로 생성되었습니다.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '할 일 생성 중 오류가 발생했습니다: ' . $e->getMessage(),
+                ], 500);
+            }
+
             return redirect()
                 ->back()
                 ->withInput()
