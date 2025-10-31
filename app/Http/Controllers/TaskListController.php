@@ -3,17 +3,27 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTaskListRequest;
+use App\Http\Requests\UpdateTaskListRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+use Src\Application\Task\UseCases\GetTaskList as GetTaskListTasks;
 use Src\Application\TaskList\DTOs\CreateTaskListDTO;
+use Src\Application\TaskList\DTOs\UpdateTaskListDTO;
 use Src\Application\TaskList\UseCases\CreateTaskList;
+use Src\Application\TaskList\UseCases\GetTaskList;
 use Src\Application\TaskList\UseCases\GetTaskListList;
+use Src\Application\TaskList\UseCases\UpdateTaskList;
+use Src\Shared\Exceptions\NotFoundException;
 
 class TaskListController extends Controller
 {
     public function __construct(
         private readonly GetTaskListList $getTaskListList,
-        private readonly CreateTaskList $createTaskList
+        private readonly GetTaskList $getTaskList,
+        private readonly CreateTaskList $createTaskList,
+        private readonly UpdateTaskList $updateTaskList,
+        private readonly GetTaskListTasks $getTaskListTasks
     ) {
     }
 
@@ -50,6 +60,33 @@ class TaskListController extends Controller
                 'success' => false,
                 'message' => '목록 조회 중 오류가 발생했습니다: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Display the specified task list.
+     */
+    public function show(int $id): View
+    {
+        try {
+            // TaskList 조회
+            $taskListDto = $this->getTaskList->execute($id);
+
+            // 해당 TaskList에 속한 Tasks 조회
+            $tasksDto = $this->getTaskListTasks->execute(
+                taskListId: $id,
+                completed: null, // 전체 조회
+                limit: 100,
+                offset: 0
+            );
+
+            return view('task-lists.show', [
+                'taskList' => $taskListDto,
+                'tasks' => $tasksDto->tasks,
+                'total' => $tasksDto->total,
+            ]);
+        } catch (NotFoundException $e) {
+            abort(404, 'TaskList를 찾을 수 없습니다.');
         }
     }
 
@@ -97,6 +134,41 @@ class TaskListController extends Controller
                 ->back()
                 ->withInput()
                 ->with('error', '목록 생성 중 오류가 발생했습니다: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update the specified task list in storage.
+     */
+    public function update(UpdateTaskListRequest $request, int $id): JsonResponse
+    {
+        try {
+            $dto = UpdateTaskListDTO::fromArray($request->validated());
+
+            $taskListDto = $this->updateTaskList->execute($id, $dto);
+
+            return response()->json([
+                'success' => true,
+                'message' => '목록이 성공적으로 수정되었습니다.',
+                'taskList' => [
+                    'id' => $taskListDto->id,
+                    'name' => $taskListDto->name,
+                    'description' => $taskListDto->description,
+                    'incomplete_task_count' => $taskListDto->incompleteTaskCount,
+                    'created_at' => $taskListDto->createdAt,
+                    'updated_at' => $taskListDto->updatedAt,
+                ],
+            ]);
+        } catch (NotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '목록을 찾을 수 없습니다.',
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '목록 수정 중 오류가 발생했습니다: ' . $e->getMessage(),
+            ], 500);
         }
     }
 }

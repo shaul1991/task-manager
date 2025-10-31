@@ -17,6 +17,7 @@ final readonly class TaskListDTO
         public int $id,
         public string $name,
         public ?string $description,
+        public int $incompleteTaskCount,
         public string $createdAt,
         public string $updatedAt,
     ) {
@@ -24,13 +25,17 @@ final readonly class TaskListDTO
 
     /**
      * TaskList Entity로부터 TaskListDTO 생성
+     *
+     * @param TaskList $taskList TaskList 엔티티
+     * @param int $incompleteTaskCount 미완료 Task 개수 (기본값: 0)
      */
-    public static function fromEntity(TaskList $taskList): self
+    public static function fromEntity(TaskList $taskList, int $incompleteTaskCount = 0): self
     {
         return new self(
             id: $taskList->id(),
             name: $taskList->name()->value(),
             description: $taskList->description()->value(),
+            incompleteTaskCount: $incompleteTaskCount,
             createdAt: $taskList->createdAt()->format('Y-m-d H:i:s'),
             updatedAt: $taskList->updatedAt()->format('Y-m-d H:i:s'),
         );
@@ -45,6 +50,7 @@ final readonly class TaskListDTO
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
+            'incomplete_task_count' => $this->incompleteTaskCount,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,
         ];

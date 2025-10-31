@@ -6,6 +6,7 @@ namespace Src\Application\TaskList\UseCases;
 
 use Src\Application\TaskList\DTOs\TaskListDTO;
 use Src\Application\TaskList\DTOs\TaskListListDTO;
+use Src\Domain\Task\Repositories\TaskRepositoryInterface;
 use Src\Domain\TaskList\Repositories\TaskListRepositoryInterface;
 
 /**
@@ -16,7 +17,8 @@ use Src\Domain\TaskList\Repositories\TaskListRepositoryInterface;
 final readonly class GetTaskListList
 {
     public function __construct(
-        private TaskListRepositoryInterface $taskListRepository
+        private TaskListRepositoryInterface $taskListRepository,
+        private TaskRepositoryInterface $taskRepository
     ) {
     }
 
@@ -40,9 +42,12 @@ final readonly class GetTaskListList
             offset: $offset
         );
 
-        // Domain Entity → DTO 변환
+        // Domain Entity → DTO 변환 (미완료 Task 개수 포함)
         $taskListDtos = array_map(
-            fn($taskList) => TaskListDTO::fromEntity($taskList),
+            fn($taskList) => TaskListDTO::fromEntity(
+                taskList: $taskList,
+                incompleteTaskCount: $this->taskRepository->countIncompleteByTaskListId($taskList->id())
+            ),
             $taskLists
         );
 

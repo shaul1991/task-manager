@@ -111,6 +111,17 @@ final class EloquentTaskRepository implements TaskRepositoryInterface
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function countIncompleteByTaskListId(int $taskListId): int
+    {
+        return TaskEloquentModel::query()
+            ->where('task_list_id', $taskListId)
+            ->whereNull('completed_datetime')
+            ->count();
+    }
+
+    /**
      * Eloquent Model을 Domain Entity로 변환
      */
     private function toDomain(TaskEloquentModel $eloquentTask): Task

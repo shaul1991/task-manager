@@ -55,15 +55,15 @@
             <div id="tasklist-items-container" class="space-y-1 overflow-y-auto" style="max-height: calc(100vh - 20rem);">
                 @forelse($taskLists ?? [] as $taskList)
                     <a
-                        href="#"
-                        class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
+                        href="{{ route('task-lists.show', $taskList->id) }}"
+                        class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 {{ request()->route('task_list') == $taskList->id ? 'bg-blue-50 text-blue-700' : '' }}"
                         data-tasklist-id="{{ $taskList->id }}"
                     >
                         <div class="flex items-center gap-3">
-                            <x-icons.task_list class="h-4 w-4 text-gray-500" />
+                            <x-icons.task_list class="h-4 w-4 {{ request()->route('task_list') == $taskList->id ? 'text-blue-600' : 'text-gray-500' }}" />
                             <span class="text-sm font-medium">{{ $taskList->name }}</span>
                         </div>
-                        <span class="text-xs text-gray-500">0</span>
+                        <span class="text-xs text-gray-500">{{ $taskList->incompleteTaskCount }}</span>
                     </a>
                 @empty
                     <!-- 목록이 없을 때는 아무것도 표시하지 않음 -->

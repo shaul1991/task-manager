@@ -31,11 +31,18 @@ function formatDate(dateString) {
 /**
  * Create task via AJAX
  */
-async function quickAddTask(title) {
+async function quickAddTask(title, taskListId = null) {
     try {
-        const response = await axios.post('/tasks', {
+        const payload = {
             title: title
-        }, {
+        };
+
+        // TaskList ID가 있으면 포함 (정수로 변환)
+        if (taskListId) {
+            payload.task_list_id = parseInt(taskListId, 10);
+        }
+
+        const response = await axios.post('/tasks', payload, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
@@ -136,11 +143,14 @@ function initQuickAddTask() {
             return;
         }
 
+        // Get TaskList ID from form data attribute (if on TaskList detail page)
+        const taskListId = form.dataset.taskListId || null;
+
         // Disable input during submission
         input.disabled = true;
 
-        // Create task
-        const task = await quickAddTask(title);
+        // Create task with optional TaskList ID
+        const task = await quickAddTask(title, taskListId);
 
         // Re-enable input
         input.disabled = false;

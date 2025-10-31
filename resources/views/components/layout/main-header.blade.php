@@ -6,7 +6,10 @@
 @props([
     'title' => null,
     'subtitle' => null,
+    'description' => null,
     'breadcrumbs' => [],
+    'editable' => false,
+    'taskListId' => null,
 ])
 
 <div class="mb-6">
@@ -36,10 +39,56 @@
 
     {{-- Title & Subtitle Section --}}
     <div class="flex items-center justify-between">
-        <div>
+        <div class="flex-1">
             @if($title)
-                <h1 class="text-3xl font-bold text-gray-900">{{ $title }}</h1>
+                @if($editable && $taskListId)
+                    {{-- 편집 가능한 제목 --}}
+                    <div id="editable-title-container" data-task-list-id="{{ $taskListId }}">
+                        <h1
+                            id="editable-title-display"
+                            class="text-3xl font-bold text-gray-900 cursor-pointer hover:text-gray-700 transition-colors"
+                            title="클릭하여 편집"
+                        >{{ $title }}</h1>
+                        <input
+                            type="text"
+                            id="editable-title-input"
+                            class="hidden text-3xl font-bold text-gray-900 border-b-2 border-blue-500 bg-transparent focus:outline-none w-full"
+                            value="{{ $title }}"
+                        />
+                    </div>
+                @else
+                    <h1 class="text-3xl font-bold text-gray-900">{{ $title }}</h1>
+                @endif
             @endif
+
+            @if($editable && $taskListId)
+                {{-- 편집 가능한 설명 --}}
+                <div id="editable-description-container" class="mt-2" data-task-list-id="{{ $taskListId }}">
+                    @if($description)
+                        <p
+                            id="editable-description-display"
+                            class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 transition-colors"
+                            title="클릭하여 편집"
+                        >{{ $description }}</p>
+                    @else
+                        <p
+                            id="editable-description-display"
+                            class="text-sm text-gray-400 cursor-pointer hover:text-gray-600 transition-colors italic"
+                            title="클릭하여 설명 추가"
+                        >설명을 추가하려면 클릭하세요</p>
+                    @endif
+                    <input
+                        type="text"
+                        id="editable-description-input"
+                        class="hidden text-sm text-gray-900 border-b-2 border-blue-500 bg-transparent focus:outline-none w-full"
+                        placeholder="설명을 입력하세요"
+                        value="{{ $description }}"
+                    />
+                </div>
+            @elseif($description)
+                <p class="mt-2 text-sm text-gray-600">{{ $description }}</p>
+            @endif
+
             @if($subtitle)
                 <p class="mt-2 text-gray-600">{{ $subtitle }}</p>
             @endif
