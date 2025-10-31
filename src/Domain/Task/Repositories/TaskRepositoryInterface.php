@@ -85,4 +85,12 @@ interface TaskRepositoryInterface
      * @return int 미완료 Task 개수
      */
     public function countIncompleteByTaskListId(int $taskListId): int;
+
+    /**
+     * TaskGroup에 속한 미완료 Task 개수를 조회합니다.
+     *
+     * @param int $taskGroupId TaskGroup ID
+     * @return int 미완료 Task 개수
+     */
+    public function countIncompleteByTaskGroupId(int $taskGroupId): int;
 }

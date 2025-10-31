@@ -345,14 +345,24 @@ function updateTaskInList(task) {
 }
 
 /**
- * Delete task
+ * Delete task (BFF 패턴: DELETE 후 GET 2회)
  */
 async function deleteTask(taskId) {
     if (!confirm('정말로 이 할 일을 삭제하시겠습니까?')) {
         return;
     }
 
+    // 1. 삭제 전에 필요한 정보 수집
+    const taskItem = document.querySelector(`div[data-task-id="${taskId}"]`);
+    const checkbox = taskItem?.querySelector('input[type="checkbox"]');
+    const wasCompleted = checkbox?.checked || false;
+
+    // 2. 현재 페이지의 task_list_id 가져오기
+    const quickAddForm = document.getElementById('quick-add-task-form');
+    const taskListId = quickAddForm?.dataset.taskListId;
+
     try {
+        // 3. Task 삭제 실행
         const response = await axios.delete(`/tasks/${taskId}`, {
             headers: {
                 'Accept': 'application/json'
@@ -360,31 +370,140 @@ async function deleteTask(taskId) {
         });
 
         if (response.data.success) {
-            // Close based on mode
+            // 4. Panel 닫기
             if (isMobile()) {
                 window.slideOver.close('right-panel-mobile');
             } else {
                 closeDesktopPanel();
             }
 
-            // Remove the task from the list
-            const taskItem = document.querySelector(`div[data-task-id="${taskId}"]`);
+            // 5. Task를 DOM에서 제거
             if (taskItem) {
                 taskItem.remove();
             }
 
-            // Show success message (optional, could use toast)
+            // 6. BFF 패턴: TaskList 최신 데이터 조회 및 업데이트
+            if (taskListId) {
+                await updateTaskListData(taskListId);
+            }
+
+            // 7. Main-header의 총 갯수 업데이트 (미완료 task였을 경우만)
+            if (!wasCompleted) {
+                updateMainHeaderCount(-1);
+            }
+
+            // 성공 메시지
             alert('할 일이 삭제되었습니다.');
 
-            // Reload the page if no tasks left
-            const taskItems = document.querySelectorAll('div[data-task-id]');
-            if (taskItems.length === 0) {
+            // 할 일이 없으면 페이지 새로고침
+            const remainingTasks = document.querySelectorAll('div[data-task-id]');
+            if (remainingTasks.length === 0) {
                 window.location.reload();
             }
         }
     } catch (error) {
         console.error('Failed to delete task:', error);
         alert('할 일 삭제 중 오류가 발생했습니다.');
+    }
+}
+
+/**
+ * BFF 패턴: TaskList 최신 데이터 조회 및 사이드바 업데이트
+ *
+ * GET /task-lists/{id} API를 호출하여 최신 incomplete_task_count를 가져옵니다.
+ * TaskGroup에 속한 경우, 추가로 TaskGroup 데이터도 조회합니다.
+ */
+async function updateTaskListData(taskListId) {
+    try {
+        // GET 요청 1: TaskList 조회
+        const response = await axios.get(`/task-lists/${taskListId}`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (response.data.success) {
+            const taskListData = response.data.data;
+
+            // 사이드바의 TaskList 갯수 업데이트
+            updateTaskListCountInSidebar(
+                taskListData.id,
+                taskListData.incomplete_task_count
+            );
+
+            // TaskGroup에 속한 경우, GET 요청 2: TaskGroup 조회
+            if (taskListData.task_group_id) {
+                updateTaskGroupData(taskListData.task_group_id);
+            }
+        }
+    } catch (error) {
+        console.error('Failed to update TaskList data:', error);
+    }
+}
+
+/**
+ * BFF 패턴: TaskGroup 최신 데이터 조회 및 사이드바 업데이트
+ *
+ * GET /task-groups/{id} API를 호출하여 최신 incomplete_task_count를 가져옵니다.
+ * 비동기로 실행되며 결과를 기다리지 않습니다.
+ */
+async function updateTaskGroupData(taskGroupId) {
+    try {
+        // GET 요청 2: TaskGroup 조회
+        const response = await axios.get(`/task-groups/${taskGroupId}`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (response.data.success) {
+            const taskGroupData = response.data.data;
+
+            // 사이드바의 TaskGroup 갯수 업데이트
+            updateTaskGroupCountInSidebar(
+                taskGroupData.id,
+                taskGroupData.incomplete_task_count
+            );
+        }
+    } catch (error) {
+        console.error('Failed to update TaskGroup data:', error);
+    }
+}
+
+/**
+ * 사이드바의 TaskList 갯수 업데이트
+ */
+function updateTaskListCountInSidebar(taskListId, incompleteCount) {
+    const sidebarItem = document.querySelector(`[data-tasklist-id="${taskListId}"] .text-xs`);
+    if (sidebarItem) {
+        sidebarItem.textContent = incompleteCount;
+    }
+}
+
+/**
+ * 사이드바의 TaskGroup 갯수 업데이트
+ */
+function updateTaskGroupCountInSidebar(taskGroupId, incompleteCount) {
+    const groupHeader = document.querySelector(`[data-task-group-id="${taskGroupId}"] .task-group-header .text-xs`);
+    if (groupHeader) {
+        groupHeader.textContent = incompleteCount;
+    }
+}
+
+/**
+ * Main-header의 총 할 일 갯수 업데이트
+ */
+function updateMainHeaderCount(delta) {
+    const subtitles = document.querySelectorAll('.text-gray-600');
+
+    for (const subtitle of subtitles) {
+        const match = subtitle.textContent.match(/총 (\d+)개의 할 일/);
+        if (match) {
+            const currentCount = parseInt(match[1]);
+            const newCount = Math.max(0, currentCount + delta);
+            subtitle.textContent = `총 ${newCount}개의 할 일`;
+            break;
+        }
     }
 }
 

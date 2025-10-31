@@ -16,7 +16,7 @@ Route::resource('tasks', TaskController::class);
 Route::patch('task-groups/reorder', [TaskGroupController::class, 'reorder'])
     ->name('task-groups.reorder');
 Route::resource('task-groups', TaskGroupController::class)->only([
-    'index', 'store', 'update', 'destroy'
+    'index', 'show', 'store', 'update', 'destroy'
 ]);
 
 // TaskList 순서 변경 및 그룹 이동 (resource 보다 먼저 정의)

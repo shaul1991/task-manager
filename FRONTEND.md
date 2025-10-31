@@ -647,6 +647,397 @@ composer dev
 - 로그 모니터링 (Laravel Pail)
 - Vite 개발 서버 (HMR)
 
+## BFF (Backend For Frontend) 패턴
+
+### 개요
+프론트엔드가 필요한 데이터를 효율적으로 가져오기 위해 BFF 패턴을 사용합니다.
+CUD(Create, Update, Delete) 작업 후 관련 데이터를 **독립적인 GET API**로 재조회하여 UI를 동기화합니다.
+
+### 아키텍처 결정: GET 요청 2회 방식
+
+#### 선택된 방식
+```
+DELETE /tasks/{id}
+  ↓
+GET /task-lists/{id}     → TaskList 데이터 조회
+  ↓ (조건부)
+GET /task-groups/{id}    → TaskGroup 데이터 조회
+```
+
+#### 대안 방식 (선택되지 않음)
+```
+DELETE /tasks/{id}
+  ↓
+GET /task-lists/{id}/with-group  → 통합 응답
+```
+
+---
+
+### 방식 A 선택 근거
+
+#### 1. API 재사용성 극대화 ⭐
+
+**동일한 GET API를 다양한 시나리오에서 재사용 가능:**
+
+```javascript
+// 시나리오 1: Task 삭제 후
+await axios.get('/task-lists/5');
+
+// 시나리오 2: TaskList 이름 변경 후
+await axios.get('/task-lists/5');
+
+// 시나리오 3: 사이드바 새로고침
+await axios.get('/task-lists/5');
+
+// 시나리오 4: TaskGroup만 업데이트 필요
+await axios.get('/task-groups/2');
+```
+
+**통합 API의 문제:**
+- `/task-lists/{id}/with-group`는 특정 시나리오 전용
+- TaskGroup이 필요 없는 경우에도 불필요한 데이터 전송
+- 다른 상황에서 재사용 불가능
+
+---
+
+#### 2. HTTP 캐싱 전략 최적화 ⭐
+
+**독립적인 캐싱 정책 적용 가능:**
+
+```
+GET /task-lists/5
+Cache-Control: max-age=60      (1분 캐싱)
+
+GET /task-groups/2
+Cache-Control: max-age=600     (10분 캐싱)
+```
+
+**이유:**
+- TaskList는 자주 변경됨 → 짧은 캐시
+- TaskGroup은 거의 변경 안 됨 → 긴 캐시
+
+**통합 API의 문제:**
+- 하나의 API에 하나의 캐싱 정책만 적용 가능
+- TaskList 변경 시 TaskGroup 캐시도 무효화됨
+- 캐싱 효율 감소
+
+---
+
+#### 3. RESTful 설계 원칙 준수 ⭐
+
+**표준 REST API 패턴:**
+
+```
+GET /task-lists/{id}     → 단일 TaskList 리소스 조회
+GET /task-groups/{id}    → 단일 TaskGroup 리소스 조회
+```
+
+**장점:**
+- 직관적이고 예측 가능한 API 설계
+- API 문서화 간소화
+- 개발자 온보딩 용이
+
+**통합 API의 문제:**
+```
+GET /task-lists/{id}/with-group
+GET /task-lists/{id}/with-group-and-tasks
+GET /task-lists/{id}/full
+...
+```
+- 엔드포인트 폭발 (Endpoint Explosion)
+- REST 원칙에서 벗어남
+- 유지보수 복잡도 증가
+
+---
+
+#### 4. 선택적 조회로 Overfetching 방지 ⭐
+
+**조건부 조회:**
+
+```javascript
+// TaskGroup이 있을 때만 조회
+if (taskListData.task_group_id) {
+    await axios.get(`/task-groups/${taskListData.task_group_id}`);
+}
+```
+
+**통합 API의 문제:**
+```json
+{
+    "task_list": { ... },
+    "task_group": null  // TaskGroup 없어도 필드 전송
+}
+```
+- 불필요한 데이터 전송
+- 네트워크 대역폭 낭비
+
+---
+
+#### 5. 백엔드 로직 단순성 유지 ⭐
+
+**각 API의 책임 명확:**
+
+```php
+// GET /task-lists/{id}
+public function show(int $id) {
+    return TaskList::find($id);  // TaskList만 책임
+}
+
+// GET /task-groups/{id}
+public function show(int $id) {
+    return TaskGroup::find($id);  // TaskGroup만 책임
+}
+```
+
+**통합 API의 문제:**
+```php
+public function showWithGroup(int $id, Request $request) {
+    $taskList = TaskList::find($id);
+
+    // 복잡한 조건부 로직
+    if ($request->input('include_group')) {
+        $taskGroup = TaskGroup::find($taskList->task_group_id);
+    }
+
+    if ($request->input('include_tasks')) {
+        $tasks = Task::where('task_list_id', $id)->get();
+    }
+
+    // ...
+}
+```
+- 조건부 로직 복잡도 증가
+- 테스트 케이스 증가
+
+---
+
+#### 6. 확장성 및 유연성 ⭐
+
+**새로운 요구사항 대응:**
+
+```javascript
+// 향후 TaskList + User 정보 필요 시
+const [taskList, user] = await Promise.all([
+    axios.get('/task-lists/5'),
+    axios.get('/users/10')
+]);
+
+// 기존 API 재사용, 새로운 API 추가 없음
+```
+
+**통합 API의 문제:**
+- 새로운 조합마다 새 엔드포인트 필요
+- `/task-lists/{id}/with-group-and-user`
+- API 증식
+
+---
+
+### 성능 고려사항
+
+#### 네트워크 지연 최소화
+
+**직렬 실행 (Sequential):**
+```javascript
+const taskListRes = await axios.get('/task-lists/5');    // 50ms
+const taskGroupRes = await axios.get('/task-groups/2');  // 50ms
+// 총 시간: 100ms
+```
+
+**병렬 실행 (Parallel) - 추천:**
+```javascript
+const [taskListRes, taskGroupRes] = await Promise.all([
+    axios.get('/task-lists/5'),    // 50ms
+    axios.get('/task-groups/2')    // 50ms
+]);
+// 총 시간: 50ms (동시 실행)
+```
+
+**결론:** 병렬 처리로 통합 API와 동등한 성능 달성 가능
+
+---
+
+### DELETE 후 GET 패턴 플로우
+
+#### 전체 시퀀스
+
+```
+1. 사용자: "할 일 삭제" 버튼 클릭
+   ↓
+2. 프론트엔드: DELETE /tasks/{id} 호출
+   ↓
+3. 백엔드: Task 삭제 실행
+   ↓
+4. 백엔드: { success: true } 응답
+   ↓
+5. 프론트엔드: Task를 DOM에서 제거
+   ↓
+6. 프론트엔드: GET /task-lists/{id} 호출
+   ↓
+7. 백엔드: TaskList + incomplete_task_count 반환
+   ↓
+8. 프론트엔드: 사이드바 TaskList 갯수 업데이트
+   ↓
+9. 프론트엔드: task_group_id 확인
+   ↓ (있으면)
+10. 프론트엔드: GET /task-groups/{id} 호출
+   ↓
+11. 백엔드: TaskGroup + incomplete_task_count 반환
+   ↓
+12. 프론트엔드: 사이드바 TaskGroup 갯수 업데이트
+```
+
+---
+
+### API 응답 형식
+
+#### TaskList GET API
+**엔드포인트:** `GET /task-lists/{id}`
+
+**요청:**
+```http
+GET /task-lists/5
+Accept: application/json
+```
+
+**응답:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 5,
+    "name": "쇼핑 목록",
+    "description": "장보기",
+    "incomplete_task_count": 8,
+    "task_group_id": 2,
+    "created_at": "2025-10-30T10:00:00Z",
+    "updated_at": "2025-10-30T15:30:00Z"
+  }
+}
+```
+
+---
+
+#### TaskGroup GET API
+**엔드포인트:** `GET /task-groups/{id}`
+
+**요청:**
+```http
+GET /task-groups/2
+Accept: application/json
+```
+
+**응답:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "name": "개인",
+    "incomplete_task_count": 25,
+    "created_at": "2025-10-25T09:00:00Z",
+    "updated_at": "2025-10-30T15:30:00Z"
+  }
+}
+```
+
+---
+
+### 구현 예시
+
+#### Task 삭제 시 동기화
+
+**JavaScript 코드 (`resources/js/tasks/taskSlideOver.js`):**
+```javascript
+async function deleteTask(taskId) {
+    // 1. Task 삭제
+    await axios.delete(`/tasks/${taskId}`);
+
+    // 2. TaskList 최신 데이터 조회
+    const taskListRes = await axios.get(`/task-lists/${taskListId}`);
+    const { incomplete_task_count, task_group_id } = taskListRes.data.data;
+
+    // 3. 사이드바 TaskList 갯수 업데이트
+    updateTaskListCountInSidebar(taskListId, incomplete_task_count);
+
+    // 4. TaskGroup이 있으면 추가 조회 (비동기)
+    if (task_group_id) {
+        updateTaskGroupData(task_group_id);
+    }
+}
+
+// BFF: TaskList 최신 데이터 조회
+async function updateTaskListData(taskListId) {
+    const response = await axios.get(`/task-lists/${taskListId}`, {
+        headers: { 'Accept': 'application/json' }
+    });
+
+    if (response.data.success) {
+        const taskListData = response.data.data;
+        updateTaskListCountInSidebar(taskListData.id, taskListData.incomplete_task_count);
+
+        if (taskListData.task_group_id) {
+            updateTaskGroupData(taskListData.task_group_id);
+        }
+    }
+}
+
+// BFF: TaskGroup 최신 데이터 조회
+async function updateTaskGroupData(taskGroupId) {
+    const response = await axios.get(`/task-groups/${taskGroupId}`, {
+        headers: { 'Accept': 'application/json' }
+    });
+
+    if (response.data.success) {
+        const taskGroupData = response.data.data;
+        updateTaskGroupCountInSidebar(taskGroupData.id, taskGroupData.incomplete_task_count);
+    }
+}
+```
+
+---
+
+### 트레이드오프 인정
+
+#### 단점
+
+1. **네트워크 요청 횟수 증가**
+   - 2번의 HTTP 요청
+   - 미터드 커넥션 환경에서 비용 증가 가능
+
+2. **프론트엔드 로직 복잡도 증가**
+   - 2단계 조회 로직 필요
+   - 에러 처리 복잡도 증가
+
+#### 완화 방법
+
+1. **병렬 처리로 성능 최적화**
+   ```javascript
+   await Promise.all([...])
+   ```
+
+2. **HTTP/2 활용**
+   - 다중 요청 효율적 처리
+   - 단일 TCP 연결 재사용
+
+3. **에러 처리 헬퍼 함수**
+   - 공통 에러 처리 로직 추상화
+   - 코드 중복 제거
+
+---
+
+### 결론
+
+**GET 요청 2회 방식**은 다음 이유로 선택되었습니다:
+
+1. ✅ **API 재사용성** - 다양한 시나리오에서 동일 API 활용
+2. ✅ **HTTP 캐싱** - 독립적인 캐싱 전략으로 효율 극대화
+3. ✅ **RESTful 설계** - 표준 REST 원칙 준수로 유지보수 용이
+4. ✅ **선택적 조회** - Overfetching 방지로 네트워크 최적화
+5. ✅ **백엔드 단순성** - 각 API의 명확한 책임 분리
+6. ✅ **확장성** - 새로운 요구사항에 유연하게 대응
+
+성능 트레이드오프는 **병렬 처리**와 **HTTP/2**로 완화 가능합니다.
+
 ## 참조
 
 이 문서는 프론트엔드 개발에 특화된 문서입니다. 백엔드 개발은 @BACKEND.md를 참조하세요.

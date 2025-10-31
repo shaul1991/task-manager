@@ -9,11 +9,13 @@ use Illuminate\Http\JsonResponse;
 use Src\Application\TaskGroup\UseCases\CreateTaskGroup;
 use Src\Application\TaskGroup\UseCases\UpdateTaskGroup;
 use Src\Application\TaskGroup\UseCases\DeleteTaskGroup;
+use Src\Application\TaskGroup\UseCases\GetTaskGroup;
 use Src\Application\TaskGroup\UseCases\GetTaskGroupList;
 use Src\Application\TaskGroup\UseCases\UpdateTaskGroupOrder;
 use Src\Application\TaskGroup\DTOs\CreateTaskGroupDTO;
 use Src\Application\TaskGroup\DTOs\UpdateTaskGroupDTO;
 use Src\Application\TaskGroup\DTOs\UpdateTaskGroupOrderDTO;
+use Src\Shared\Exceptions\NotFoundException;
 
 /**
  * TaskGroup Controller
@@ -26,6 +28,7 @@ class TaskGroupController extends Controller
         private readonly CreateTaskGroup $createTaskGroup,
         private readonly UpdateTaskGroup $updateTaskGroup,
         private readonly DeleteTaskGroup $deleteTaskGroup,
+        private readonly GetTaskGroup $getTaskGroup,
         private readonly GetTaskGroupList $getTaskGroupList,
         private readonly UpdateTaskGroupOrder $updateTaskGroupOrder
     ) {
@@ -49,6 +52,40 @@ class TaskGroupController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get a single TaskGroup (BFF API)
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function show(int $id): JsonResponse
+    {
+        try {
+            $taskGroupDto = $this->getTaskGroup->execute($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $taskGroupDto->id,
+                    'name' => $taskGroupDto->name,
+                    'incomplete_task_count' => $taskGroupDto->incompleteTaskCount,
+                    'created_at' => $taskGroupDto->createdAt,
+                    'updated_at' => $taskGroupDto->updatedAt,
+                ],
+            ]);
+        } catch (NotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'TaskGroup을 찾을 수 없습니다.',
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'TaskGroup 조회 중 오류가 발생했습니다: ' . $e->getMessage(),
             ], 500);
         }
     }

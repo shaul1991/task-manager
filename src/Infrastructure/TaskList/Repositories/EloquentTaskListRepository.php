@@ -23,6 +23,7 @@ final class EloquentTaskListRepository implements TaskListRepositoryInterface
         $data = [
             'name' => $taskList->name()->value(),
             'description' => $taskList->description()->value(),
+            'task_group_id' => $taskList->taskGroupId(),
         ];
 
         if ($taskList->id() === null) {
@@ -120,6 +121,7 @@ final class EloquentTaskListRepository implements TaskListRepositoryInterface
             id: $eloquentTaskList->id,
             name: new TaskListName($eloquentTaskList->name),
             description: new TaskListDescription($eloquentTaskList->description),
+            taskGroupId: $eloquentTaskList->task_group_id,
             createdAt: new DateTimeImmutable($eloquentTaskList->created_at->toDateTimeString()),
             updatedAt: new DateTimeImmutable($eloquentTaskList->updated_at->toDateTimeString())
         );

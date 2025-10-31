@@ -73,13 +73,29 @@ class TaskListController extends Controller
     /**
      * Display the specified task list.
      */
-    public function show(int $id): View
+    public function show(Request $request, int $id): View|JsonResponse
     {
         try {
             // TaskList 조회
             $taskListDto = $this->getTaskList->execute($id);
 
-            // 해당 TaskList에 속한 Tasks 조회
+            // JSON response for AJAX requests (BFF 패턴)
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'id' => $taskListDto->id,
+                        'name' => $taskListDto->name,
+                        'description' => $taskListDto->description,
+                        'incomplete_task_count' => $taskListDto->incompleteTaskCount,
+                        'task_group_id' => $taskListDto->taskGroupId,
+                        'created_at' => $taskListDto->createdAt,
+                        'updated_at' => $taskListDto->updatedAt,
+                    ],
+                ]);
+            }
+
+            // 해당 TaskList에 속한 Tasks 조회 (View용)
             $tasksDto = $this->getTaskListTasks->execute(
                 taskListId: $id,
                 completed: null, // 전체 조회
@@ -93,6 +109,13 @@ class TaskListController extends Controller
                 'total' => $tasksDto->total,
             ]);
         } catch (NotFoundException $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'TaskList를 찾을 수 없습니다.',
+                ], 404);
+            }
+
             abort(404, 'TaskList를 찾을 수 없습니다.');
         }
     }

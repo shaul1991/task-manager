@@ -121,6 +121,16 @@ final class EloquentTaskRepository implements TaskRepositoryInterface
             ->count();
     }
 
+    public function countIncompleteByTaskGroupId(int $taskGroupId): int
+    {
+        return TaskEloquentModel::query()
+            ->whereHas('taskList', function ($query) use ($taskGroupId) {
+                $query->where('task_group_id', $taskGroupId);
+            })
+            ->whereNull('completed_datetime')
+            ->count();
+    }
+
     /**
      * Eloquent Model을 Domain Entity로 변환
      */

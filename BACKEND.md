@@ -1106,9 +1106,334 @@ php artisan test --filter test_할일_완료_시_완료_일시_설정
 - **명확성**: 테스트 이름과 구조만으로 의도 파악 가능
 - **빠른 실행**: 유닛 테스트는 1초 이내 실행
 
-## API 설계 (예정)
+## API 설계
 
-추후 RESTful API 설계 가이드가 추가될 예정입니다.
+### BFF (Backend For Frontend) 패턴
+
+프론트엔드 요구사항에 맞춰 최적화된 API를 제공합니다.
+
+---
+
+### 아키텍처 결정: 독립적인 GET API 방식
+
+#### 선택된 방식
+```
+각 리소스별로 독립적인 GET 엔드포인트 제공
+- GET /task-lists/{id}
+- GET /task-groups/{id}
+```
+
+#### 대안 방식 (선택되지 않음)
+```
+통합 GET 엔드포인트
+- GET /task-lists/{id}/with-group
+```
+
+---
+
+### 독립적인 GET API 방식 선택 근거
+
+#### 1. 단일 책임 원칙 (Single Responsibility Principle)
+
+**각 API는 하나의 리소스만 책임:**
+
+```php
+// TaskListController
+public function show(int $id) {
+    $taskList = $this->getTaskList->execute($id);
+    return response()->json(['data' => $taskList]);
+}
+
+// TaskGroupController
+public function show(int $id) {
+    $taskGroup = $this->getTaskGroup->execute($id);
+    return response()->json(['data' => $taskGroup]);
+}
+```
+
+**장점:**
+- 각 API의 역할 명확
+- 테스트 간소화
+- 유지보수 용이
+
+---
+
+#### 2. 캐싱 최적화
+
+**리소스별 독립적인 캐싱 정책:**
+
+```php
+// TaskList: 자주 변경됨 → 짧은 캐시
+Route::get('/task-lists/{id}', ...)
+    ->middleware('cache:60');  // 1분
+
+// TaskGroup: 거의 변경 안 됨 → 긴 캐시
+Route::get('/task-groups/{id}', ...)
+    ->middleware('cache:600');  // 10분
+```
+
+**통합 API의 한계:**
+- 하나의 캐싱 정책만 적용 가능
+- TaskList 변경 시 TaskGroup 캐시도 무효화
+
+---
+
+#### 3. RESTful 설계 준수
+
+**표준 REST 리소스 패턴:**
+
+```php
+// TaskList 리소스
+Route::resource('task-lists', TaskListController::class);
+
+// TaskGroup 리소스
+Route::resource('task-groups', TaskGroupController::class);
+```
+
+**장점:**
+- Laravel의 Resource Controller 활용
+- 예측 가능한 URL 구조
+- API 문서 자동 생성 용이
+
+---
+
+#### 4. 쿼리 최적화
+
+**각 API는 필요한 데이터만 조회:**
+
+```php
+// GET /task-lists/{id}
+public function show(int $id) {
+    // TaskList + incompleteTaskCount만 조회
+    $taskList = TaskList::withCount([
+        'tasks as incompleteTaskCount' => fn($q) => $q->whereNull('completed_datetime')
+    ])->findOrFail($id);
+
+    return response()->json(['data' => $taskList]);
+}
+
+// GET /task-groups/{id}
+public function show(int $id) {
+    // TaskGroup + incompleteTaskCount만 조회
+    $taskGroup = TaskGroup::withCount([
+        'tasks as incompleteTaskCount' => fn($q) => $q->whereNull('completed_datetime')
+    ])->findOrFail($id);
+
+    return response()->json(['data' => $taskGroup]);
+}
+```
+
+**통합 API의 문제:**
+```php
+// GET /task-lists/{id}/with-group
+public function showWithGroup(int $id) {
+    // 복잡한 조인 또는 N+1 쿼리 발생
+    $taskList = TaskList::with(['taskGroup' => function($q) {
+        $q->withCount('tasks');
+    }])->findOrFail($id);
+
+    // 조건부 로직 필요
+    if (!$taskList->taskGroup) {
+        // TaskGroup 없는 경우 처리...
+    }
+}
+```
+
+---
+
+### GET API 설계 원칙
+
+#### 1. JSON 응답 지원
+
+**`Accept: application/json` 헤더로 JSON 응답 요청:**
+
+```php
+public function show(Request $request, int $id): View|JsonResponse
+{
+    $taskListDto = $this->getTaskList->execute($id);
+
+    // AJAX 요청 시 JSON 반환
+    if ($request->expectsJson()) {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $taskListDto->id,
+                'name' => $taskListDto->name,
+                'incomplete_task_count' => $taskListDto->incompleteTaskCount,
+                'task_group_id' => $taskListDto->taskGroupId,
+            ],
+        ]);
+    }
+
+    // 브라우저 요청 시 View 반환
+    return view('task-lists.show', ['taskList' => $taskListDto]);
+}
+```
+
+---
+
+#### 2. 집계 데이터 포함
+
+**프론트엔드 동기화에 필요한 집계 데이터 포함:**
+
+```php
+return response()->json([
+    'success' => true,
+    'data' => [
+        'id' => 5,
+        'name' => '쇼핑 목록',
+        'incomplete_task_count' => 8,  // 집계 데이터
+        'task_group_id' => 2,           // 부모 참조
+    ],
+]);
+```
+
+---
+
+#### 3. 부모 엔티티 참조 제공
+
+**프론트엔드가 연쇄 조회 가능하도록 부모 ID 포함:**
+
+```php
+// TaskList 응답에 task_group_id 포함
+'task_group_id' => $taskListDto->taskGroupId
+
+// 프론트엔드에서 추가 조회 가능
+if (taskList.task_group_id) {
+    await axios.get(`/task-groups/${taskList.task_group_id}`);
+}
+```
+
+---
+
+### DELETE 후 GET 패턴
+
+#### 시퀀스 다이어그램
+
+```
+프론트엔드          TaskController      TaskListController    TaskGroupController
+    |                    |                      |                      |
+    |--DELETE /tasks/1-->|                      |                      |
+    |                    |--[Task 삭제]         |                      |
+    |<--{success:true}---|                      |                      |
+    |                    |                      |                      |
+    |--GET /task-lists/5----------------------->|                      |
+    |                    |                      |--[TaskList 조회]     |
+    |                    |                      |--[count 계산]        |
+    |<--{data: {..., incomplete_task_count}}---|                      |
+    |                    |                      |                      |
+    |--GET /task-groups/2-------------------------------------->|
+    |                    |                      |                |--[TaskGroup 조회]
+    |                    |                      |                |--[count 계산]
+    |<--{data: {..., incomplete_task_count}}-------------------|
+```
+
+---
+
+#### 백엔드 구현
+
+**TaskController (DELETE 엔드포인트):**
+```php
+public function destroy(Request $request, int $id): JsonResponse
+{
+    try {
+        $this->deleteTask->execute($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => '할 일이 성공적으로 삭제되었습니다.',
+        ]);
+    } catch (NotFoundException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => '할 일을 찾을 수 없습니다.',
+        ], 404);
+    }
+}
+```
+
+**TaskListController (GET 엔드포인트):**
+```php
+public function show(Request $request, int $id): JsonResponse
+{
+    $taskListDto = $this->getTaskList->execute($id);
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'id' => $taskListDto->id,
+            'incomplete_task_count' => $taskListDto->incompleteTaskCount,
+            'task_group_id' => $taskListDto->taskGroupId,
+        ],
+    ]);
+}
+```
+
+**TaskGroupController (GET 엔드포인트):**
+```php
+public function show(int $id): JsonResponse
+{
+    $taskGroupDto = $this->getTaskGroup->execute($id);
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'id' => $taskGroupDto->id,
+            'incomplete_task_count' => $taskGroupDto->incompleteTaskCount,
+        ],
+    ]);
+}
+```
+
+---
+
+### 장점 요약
+
+1. ✅ **명확한 책임 분리** - 각 API는 단일 리소스만 처리
+2. ✅ **캐싱 최적화** - 리소스별 독립적인 캐싱 정책
+3. ✅ **RESTful 설계** - 표준 REST 원칙 준수
+4. ✅ **쿼리 최적화** - 필요한 데이터만 조회
+5. ✅ **유지보수 용이** - 각 API 독립적으로 수정 가능
+6. ✅ **테스트 간소화** - 각 API별 독립적인 테스트
+7. ✅ **재사용성** - 다양한 시나리오에서 동일 API 활용
+
+---
+
+### 트레이드오프
+
+#### 단점
+
+1. **프론트엔드 요청 횟수 증가**
+   - 2번의 HTTP 요청 필요
+
+#### 완화 방법
+
+1. **프론트엔드 병렬 처리**
+   ```javascript
+   await Promise.all([...])
+   ```
+
+2. **HTTP/2 지원**
+   - Laravel Valet/Octane에서 HTTP/2 지원
+   - 다중 요청 효율적 처리
+
+3. **응답 크기 최소화**
+   - 필요한 필드만 반환
+   - 불필요한 데이터 제거
+
+---
+
+### 결론
+
+**독립적인 GET API 방식**은 다음 이유로 선택되었습니다:
+
+- RESTful 설계 원칙 준수
+- 명확한 책임 분리
+- 최적화된 캐싱 전략
+- 높은 재사용성
+- 유지보수 용이성
+
+백엔드는 간결하고 명확한 API를 제공하며, 프론트엔드에서 필요에 따라 조합하여 사용하는 구조입니다.
 
 ## 참조
 

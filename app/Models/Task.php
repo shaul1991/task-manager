@@ -54,4 +54,12 @@ class Task extends Model
      * @var bool
      */
     public $timestamps = true;
+
+    /**
+     * Task belongs to TaskList
+     */
+    public function taskList()
+    {
+        return $this->belongsTo(TaskList::class, 'task_list_id');
+    }
 }
