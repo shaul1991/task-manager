@@ -85,10 +85,10 @@ class TaskController extends Controller
                     'title' => $taskDto->title,
                     'description' => $taskDto->description,
                     'completed' => $taskDto->isCompleted,
-                    'completed_datetime' => $taskDto->completedDateTime?->format('Y-m-d H:i:s'),
+                    'completed_datetime' => $taskDto->completedDateTime,
                     'task_list_id' => $taskDto->taskListId,
-                    'created_at' => $taskDto->createdAt->format('Y-m-d H:i:s'),
-                    'updated_at' => $taskDto->updatedAt->format('Y-m-d H:i:s'),
+                    'created_at' => $taskDto->createdAt,
+                    'updated_at' => $taskDto->updatedAt,
                 ],
             ]);
         } catch (NotFoundException $e) {
@@ -140,10 +140,10 @@ class TaskController extends Controller
                         'title' => $taskDto->title,
                         'description' => $taskDto->description,
                         'completed' => $taskDto->isCompleted,
-                        'completed_datetime' => $taskDto->completedDateTime?->format('Y-m-d H:i:s'),
+                        'completed_datetime' => $taskDto->completedDateTime,
                         'task_list_id' => $taskDto->taskListId,
-                        'created_at' => $taskDto->createdAt->format('Y-m-d H:i:s'),
-                        'updated_at' => $taskDto->updatedAt->format('Y-m-d H:i:s'),
+                        'created_at' => $taskDto->createdAt,
+                        'updated_at' => $taskDto->updatedAt,
                     ],
                 ]);
             }
