@@ -99,86 +99,47 @@ function hideDropdown() {
 }
 
 /**
- * 모달 초기화
+ * 모달 초기화 (더 이상 필요 없음 - window.confirmModal 사용)
  */
 function initDeleteModal() {
-    const modal = document.getElementById('delete-confirmation-modal');
-    if (!modal) return;
-
-    // 모달 닫기 버튼들
-    const closeButtons = modal.querySelectorAll('.modal-close, .modal-cancel');
-    closeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            hideDeleteModal();
-        });
-    });
-
-    // 모달 배경 클릭 시 닫기
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            hideDeleteModal();
-        }
-    });
-
-    // ESC 키로 모달 닫기
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal.classList.contains('show')) {
-            hideDeleteModal();
-        }
-    });
-
-    // 삭제 확인 버튼
-    const confirmButton = modal.querySelector('#modal-confirm-delete');
-    if (confirmButton) {
-        confirmButton.addEventListener('click', function() {
-            handleDelete();
-        });
-    }
+    // confirm-modal.blade.php에서 전역으로 초기화됨
+    // 이 함수는 호환성을 위해 유지
 }
 
 /**
- * 삭제 모달 표시
+ * 삭제 모달 표시 (Promise 기반으로 변경)
  */
-function showDeleteModal() {
-    const modal = document.getElementById('delete-confirmation-modal');
-    if (!modal) return;
+async function showDeleteModal() {
+    if (!currentEntity.type || !currentEntity.id) {
+        console.error('Invalid entity for deletion');
+        return;
+    }
 
-    // 엔티티 타입에 따라 텍스트 변경
-    const entityTypeText = modal.querySelector('#modal-entity-type-text');
-    const entityNameText = modal.querySelector('#modal-entity-name');
-    const entityTypeKo = modal.querySelector('#modal-entity-type-ko');
-    const tasklistWarning = modal.querySelector('#modal-tasklist-warning');
-    const taskgroupWarning = modal.querySelector('#modal-taskgroup-warning');
+    // 엔티티 타입에 따라 메시지 구성
+    let title, message, warningMessage;
 
     if (currentEntity.type === 'tasklist') {
-        entityTypeText.textContent = '목록';
-        entityTypeKo.textContent = '을(를)';
-        tasklistWarning.classList.remove('hidden');
-        taskgroupWarning.classList.add('hidden');
+        title = '목록 삭제';
+        message = `${currentEntity.name}을(를) 정말 삭제하시겠습니까?`;
+        warningMessage = '\n\n⚠️ 이 목록에 속한 할 일들은 그룹 없음 상태로 이동됩니다.';
     } else if (currentEntity.type === 'taskgroup') {
-        entityTypeText.textContent = '그룹';
-        entityTypeKo.textContent = '을(를)';
-        tasklistWarning.classList.add('hidden');
-        taskgroupWarning.classList.remove('hidden');
+        title = '그룹 삭제';
+        message = `${currentEntity.name}을(를) 정말 삭제하시겠습니까?`;
+        warningMessage = '\n\n⚠️ 이 그룹에 속한 모든 목록과 할 일이 함께 삭제됩니다.';
     }
 
-    entityNameText.textContent = currentEntity.name;
+    // window.confirmModal.show() 사용
+    const confirmed = await window.confirmModal.show({
+        title: title,
+        message: message + warningMessage,
+        confirmText: '삭제',
+        cancelText: '취소',
+        type: 'danger'
+    });
 
-    modal.classList.add('show');
-}
-
-/**
- * 삭제 모달 숨기기
- */
-function hideDeleteModal() {
-    const modal = document.getElementById('delete-confirmation-modal');
-    if (!modal) return;
-
-    modal.classList.add('closing');
-
-    setTimeout(() => {
-        modal.classList.remove('show', 'closing');
-    }, 150); // closing 애니메이션 시간과 일치
+    if (confirmed) {
+        await handleDelete();
+    }
 }
 
 /**
@@ -190,8 +151,6 @@ async function handleDelete() {
         return;
     }
 
-    hideDeleteModal();
-
     try {
         if (currentEntity.type === 'tasklist') {
             await deleteTaskList(currentEntity.id);
@@ -200,7 +159,9 @@ async function handleDelete() {
         }
     } catch (error) {
         console.error('Delete failed:', error);
-        alert('삭제 중 오류가 발생했습니다.');
+        if (window.toast) {
+            window.toast.error('삭제 중 오류가 발생했습니다.', 3000);
+        }
     }
 }
 
@@ -211,8 +172,14 @@ async function deleteTaskList(taskListId) {
     const response = await window.axios.delete(`/task-lists/${taskListId}`);
 
     if (response.data.success) {
-        // 성공 시 페이지 새로고침
-        window.location.reload();
+        // TaskList 상세 페이지에서 삭제한 경우 메인 페이지로 이동
+        // 다른 페이지에서 삭제한 경우 새로고침
+        const currentPath = window.location.pathname;
+        if (currentPath.includes(`/task-lists/${taskListId}`)) {
+            window.location.href = '/';
+        } else {
+            window.location.reload();
+        }
     } else {
         throw new Error(response.data.message || 'Failed to delete TaskList');
     }
@@ -225,8 +192,14 @@ async function deleteTaskGroup(taskGroupId) {
     const response = await window.axios.delete(`/task-groups/${taskGroupId}`);
 
     if (response.data.success) {
-        // 성공 시 페이지 새로고침
-        window.location.reload();
+        // TaskGroup 상세 페이지에서 삭제한 경우 메인 페이지로 이동
+        // 다른 페이지에서 삭제한 경우 새로고침
+        const currentPath = window.location.pathname;
+        if (currentPath.includes(`/task-groups/${taskGroupId}`)) {
+            window.location.href = '/';
+        } else {
+            window.location.reload();
+        }
     } else {
         throw new Error(response.data.message || 'Failed to delete TaskGroup');
     }

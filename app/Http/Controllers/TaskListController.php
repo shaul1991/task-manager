@@ -97,10 +97,10 @@ class TaskListController extends Controller
                 ]);
             }
 
-            // 해당 TaskList에 속한 Tasks 조회 (View용)
+            // 해당 TaskList에 속한 Tasks 조회 (UseCase 사용)
             $tasksDto = $this->getTaskListTasks->execute(
                 taskListId: $id,
-                completed: null, // 전체 조회
+                completed: null,
                 limit: 100,
                 offset: 0
             );

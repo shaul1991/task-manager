@@ -31,9 +31,9 @@
                         onclick="window.openTaskDetail({{ $task->id }})"
                     >
                         {{-- TaskList 뱃지 (있는 경우만 표시) --}}
-                        @if($task->taskList)
+                        @if($task->taskListName)
                             <span class="inline-block px-2 py-0.5 mb-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">
-                                {{ $task->taskList->name }}
+                                {{ $task->taskListName }}
                             </span>
                         @endif
 

@@ -180,5 +180,5 @@
 {{-- Dropdown Menu (전역 - sidebar 밖에 위치) --}}
 <x-ui.dropdown-menu />
 
-{{-- Delete Confirmation Modal (전역 - sidebar 밖에 위치) --}}
-<x-ui.delete-confirmation-modal />
+{{-- Confirm Modal (전역 - sidebar 밖에 위치) --}}
+<x-ui.confirm-modal />

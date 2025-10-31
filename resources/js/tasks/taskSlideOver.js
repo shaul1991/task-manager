@@ -339,7 +339,16 @@ function updateTaskInList(task) {
  * Delete task (BFF 패턴: DELETE 후 GET 2회)
  */
 async function deleteTask(taskId) {
-    if (!confirm('정말로 이 할 일을 삭제하시겠습니까?')) {
+    // Confirm modal 사용
+    const confirmed = await window.confirmModal.show({
+        title: '할 일 삭제',
+        message: '정말로 이 할 일을 삭제하시겠습니까?',
+        confirmText: '삭제',
+        cancelText: '취소',
+        type: 'danger'
+    });
+
+    if (!confirmed) {
         return;
     }
 

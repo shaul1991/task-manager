@@ -33,11 +33,12 @@ class TaskController extends Controller
      */
     public function index(): View
     {
-        $tasksDto = $this->getTaskList->execute();
+        // UseCase를 통해 Task 목록 조회 (taskListName 포함)
+        $taskListDto = $this->getTaskList->execute();
 
         return view('tasks.index', [
-            'tasks' => $tasksDto->tasks,
-            'total' => $tasksDto->total,
+            'tasks' => $taskListDto->tasks,
+            'total' => $taskListDto->total,
         ]);
     }
 

@@ -12,10 +12,10 @@ use Src\Application\Exceptions\NotFoundException;
  *
  * TaskList를 삭제하고, 속한 Task들을 고아 상태(task_list_id = null)로 만듭니다.
  */
-final class DeleteTaskList
+final readonly class DeleteTaskList
 {
     public function __construct(
-        private readonly TaskListRepositoryInterface $taskListRepository
+        private TaskListRepositoryInterface $taskListRepository
     ) {
     }
 
