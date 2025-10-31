@@ -124,9 +124,9 @@ function showSaveStatus(status) {
     if (status === 'saving') {
         isSaving = true;
         // Show saving toast (no auto-dismiss)
-        if (window.toast) {
-            currentSavingToast = window.toast.saving('저장 중...');
-        }
+        // if (window.toast) {
+            // currentSavingToast = window.toast.saving('저장 중...');
+        // }
     } else if (status === 'saved') {
         isSaving = false;
         // Hide saving toast if exists
