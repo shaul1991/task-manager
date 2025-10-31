@@ -35,15 +35,6 @@
 
         <!-- Right Section: Quick Actions + User Profile -->
         <div class="flex items-center gap-3">
-            <!-- Quick Add Button (PC에서만 표시) -->
-            <button
-                type="button"
-                class="hidden sm:flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            >
-                <x-icons.plus class="w-5 h-5" />
-                <span>새 할 일</span>
-            </button>
-
             <!-- User Profile Dropdown -->
             <div class="relative">
                 <button

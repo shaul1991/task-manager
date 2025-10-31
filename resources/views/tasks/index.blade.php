@@ -86,13 +86,6 @@
                 autocomplete="off"
                 class="flex-1 border-0 bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 p-0"
             />
-            <button
-                type="submit"
-                id="quick-add-task-btn"
-                class="hidden text-sm font-medium text-blue-600 hover:text-blue-700 focus:outline-none px-3 py-1 rounded-md hover:bg-blue-50 transition-colors"
-            >
-                추가
-            </button>
         </form>
     </div>
 

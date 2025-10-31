@@ -122,9 +122,8 @@ function addTaskToList(task) {
 function initQuickAddTask() {
     const form = document.getElementById('quick-add-task-form');
     const input = document.getElementById('quick-add-task-input');
-    const button = document.getElementById('quick-add-task-btn');
 
-    if (!form || !input || !button) return;
+    if (!form || !input) return;
 
     // Handle form submission
     form.addEventListener('submit', async function(e) {
@@ -139,16 +138,12 @@ function initQuickAddTask() {
 
         // Disable input during submission
         input.disabled = true;
-        button.disabled = true;
-        button.textContent = '추가 중...';
 
         // Create task
         const task = await quickAddTask(title);
 
         // Re-enable input
         input.disabled = false;
-        button.disabled = false;
-        button.textContent = '추가';
 
         if (task) {
             // Add to list
@@ -160,21 +155,6 @@ function initQuickAddTask() {
             // Keep focus for continuous input (do not blur)
             // input.blur(); // Removed to maintain focus
         }
-    });
-
-    // Show button on focus
-    input.addEventListener('focus', function() {
-        button.classList.remove('hidden');
-    });
-
-    // Hide button on blur (with delay to allow button click)
-    input.addEventListener('blur', function() {
-        setTimeout(() => {
-            // Only hide if input is still blurred (not refocused)
-            if (document.activeElement !== input) {
-                button.classList.add('hidden');
-            }
-        }, 150);
     });
 }
 
