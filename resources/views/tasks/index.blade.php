@@ -1,6 +1,10 @@
 <x-layouts.app>
     <x-slot:title>할 일 목록 - Task Manager</x-slot:title>
 
+    {{-- Override default padding and create full-height layout --}}
+    <div class="-m-6 flex h-[calc(100vh-4rem)]">
+        {{-- Main Content Area (Desktop: 70%, Mobile: 100%) --}}
+        <div id="main-content" class="flex-1 overflow-y-auto transition-all duration-300 ease-in-out p-6">
     <!-- Page Header -->
     <div class="mb-6 flex items-center justify-between">
         <div>
@@ -107,11 +111,48 @@
             </div>
         @endif
     </div>
+        </div>
+        {{-- End of Main Content Area --}}
 
-    <!-- Task Detail Slide-over Modal -->
-    <x-ui.slide-over id="task-detail-modal" title="할 일 상세" width="lg">
-        @include('tasks._detail-modal')
-    </x-ui.slide-over>
+        {{-- Right Panel Area (Desktop only, 30% width when open) --}}
+        <div
+            id="right-panel"
+            class="hidden md:block md:w-0 overflow-hidden transition-all duration-300 ease-in-out bg-white border-l border-gray-200 shadow-xl"
+        >
+            <div id="right-panel-content" class="w-[30vw] h-full overflow-y-auto">
+                {{-- Close button for desktop right panel --}}
+                <div class="sticky top-0 z-10 bg-gray-50 px-4 py-6 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-medium text-gray-900">할 일 상세</h2>
+                        <button
+                            type="button"
+                            id="desktop-panel-close"
+                            class="rounded-md bg-gray-50 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        >
+                            <span class="sr-only">닫기</span>
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Task detail content --}}
+                <div class="px-4 sm:px-6">
+                    @include('tasks._detail-modal')
+                </div>
+            </div>
+        </div>
+        {{-- End of Right Panel Area --}}
+    </div>
+    {{-- End of Flex Container --}}
+
+    {{-- Mobile Slide-over Modal (shown only on mobile) --}}
+    <div class="md:hidden">
+        <x-ui.slide-over id="task-detail-modal-mobile" title="할 일 상세" width="lg">
+            @include('tasks._detail-modal')
+        </x-ui.slide-over>
+    </div>
 
     @push('scripts')
         @vite(['resources/js/tasks/taskSlideOver.js'])

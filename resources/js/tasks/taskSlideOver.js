@@ -1,6 +1,7 @@
 /**
  * Task Slide-over Modal
  * Handles task detail view with auto-save functionality
+ * Supports responsive layout: Desktop (split) / Mobile (overlay)
  */
 
 // Current task ID
@@ -12,6 +13,9 @@ let saveTimeout = null;
 // Save state
 let isSaving = false;
 
+// Main content click handler reference
+let mainContentClickHandler = null;
+
 /**
  * Debounce function
  */
@@ -20,6 +24,66 @@ function debounce(func, delay) {
         clearTimeout(saveTimeout);
         saveTimeout = setTimeout(() => func.apply(this, args), delay);
     };
+}
+
+/**
+ * Check if viewport is mobile (< 768px)
+ */
+function isMobile() {
+    return window.innerWidth < 768; // md breakpoint
+}
+
+/**
+ * Open desktop right panel (split layout)
+ */
+function openDesktopPanel() {
+    const rightPanel = document.getElementById('right-panel');
+    const mainContent = document.getElementById('main-content');
+
+    if (!rightPanel || !mainContent) return;
+
+    // Show and animate panel
+    rightPanel.classList.remove('md:w-0');
+    rightPanel.classList.add('md:w-[30vw]');
+
+    // Add click listener to main content (with delay to prevent immediate close)
+    setTimeout(() => {
+        mainContentClickHandler = function(e) {
+            // Only close if clicking directly on main content or its children
+            // Don't close if clicking on task items (to allow opening different tasks)
+            const clickedElement = e.target;
+            const isTaskItem = clickedElement.closest('[data-task-id]');
+
+            if (!isTaskItem) {
+                closeDesktopPanel();
+            }
+        };
+
+        mainContent.addEventListener('click', mainContentClickHandler, { capture: true });
+    }, 100);
+}
+
+/**
+ * Close desktop right panel
+ */
+function closeDesktopPanel() {
+    const rightPanel = document.getElementById('right-panel');
+    const mainContent = document.getElementById('main-content');
+
+    if (!rightPanel || !mainContent) return;
+
+    // Animate panel out
+    rightPanel.classList.remove('md:w-[30vw]');
+    rightPanel.classList.add('md:w-0');
+
+    // Remove click listener from main content
+    if (mainContentClickHandler) {
+        mainContent.removeEventListener('click', mainContentClickHandler, { capture: true });
+        mainContentClickHandler = null;
+    }
+
+    // Clear current task
+    currentTaskId = null;
 }
 
 /**
@@ -42,10 +106,15 @@ function formatDate(dateString) {
  * Show save status
  */
 function showSaveStatus(status) {
-    const saveStatus = document.getElementById('save-status');
-    const saveSpinner = document.getElementById('save-spinner');
-    const saveCheck = document.getElementById('save-check');
-    const saveText = document.getElementById('save-text');
+    const container = getActiveContainer();
+    if (!container) return;
+
+    const saveStatus = container.querySelector('#save-status');
+    const saveSpinner = container.querySelector('#save-spinner');
+    const saveCheck = container.querySelector('#save-check');
+    const saveText = container.querySelector('#save-text');
+
+    if (!saveStatus || !saveSpinner || !saveCheck || !saveText) return;
 
     if (status === 'saving') {
         isSaving = true;
@@ -81,11 +150,27 @@ function showSaveStatus(status) {
 }
 
 /**
+ * Get the active container (desktop or mobile)
+ */
+function getActiveContainer() {
+    if (isMobile()) {
+        return document.querySelector('#task-detail-modal-mobile');
+    } else {
+        return document.querySelector('#right-panel-content');
+    }
+}
+
+/**
  * Load task data
  */
 async function loadTaskData(taskId) {
-    const taskLoading = document.getElementById('task-loading');
-    const taskContent = document.getElementById('task-content');
+    const container = getActiveContainer();
+    if (!container) return;
+
+    const taskLoading = container.querySelector('#task-loading');
+    const taskContent = container.querySelector('#task-content');
+
+    if (!taskLoading || !taskContent) return;
 
     // Show loading state
     taskLoading.classList.remove('hidden');
@@ -102,25 +187,28 @@ async function loadTaskData(taskId) {
             const task = response.data.data;
 
             // Populate form fields
-            document.getElementById('task-title').value = task.title || '';
-            document.getElementById('task-description').value = task.description || '';
-            document.getElementById('task-completed').checked = task.completed;
+            container.querySelector('#task-title').value = task.title || '';
+            container.querySelector('#task-description').value = task.description || '';
+            container.querySelector('#task-completed').checked = task.completed;
 
             // Update timestamps
-            document.getElementById('task-created-at').textContent = formatDate(task.created_at);
-            document.getElementById('task-updated-at').textContent = formatDate(task.updated_at);
+            container.querySelector('#task-created-at').textContent = formatDate(task.created_at);
+            container.querySelector('#task-updated-at').textContent = formatDate(task.updated_at);
 
             // Show/hide completed datetime
-            const completedAtWrapper = document.getElementById('task-completed-at-wrapper');
+            const completedAtWrapper = container.querySelector('#task-completed-at-wrapper');
             if (task.completed_datetime) {
-                document.getElementById('task-completed-at').textContent = formatDate(task.completed_datetime);
+                container.querySelector('#task-completed-at').textContent = formatDate(task.completed_datetime);
                 completedAtWrapper.classList.remove('hidden');
             } else {
                 completedAtWrapper.classList.add('hidden');
             }
 
             // Update full edit link
-            document.getElementById('full-edit-link').href = `/tasks/${taskId}/edit`;
+            const fullEditLink = container.querySelector('#full-edit-link');
+            if (fullEditLink) {
+                fullEditLink.href = `/tasks/${taskId}/edit`;
+            }
 
             // Hide loading, show content
             taskLoading.classList.add('hidden');
@@ -129,7 +217,13 @@ async function loadTaskData(taskId) {
     } catch (error) {
         console.error('Failed to load task:', error);
         alert('할 일을 불러오는 중 오류가 발생했습니다.');
-        window.slideOver.close('task-detail-modal');
+
+        // Close based on mode
+        if (isMobile()) {
+            window.slideOver.close('task-detail-modal-mobile');
+        } else {
+            closeDesktopPanel();
+        }
     }
 }
 
@@ -152,17 +246,26 @@ async function saveTaskData(taskId, data) {
         if (response.data.success) {
             showSaveStatus('saved');
 
-            // Update timestamps
+            // Update timestamps in the active container
             const task = response.data.data;
-            document.getElementById('task-updated-at').textContent = formatDate(task.updated_at);
+            const container = getActiveContainer();
+            if (container) {
+                const updatedAtElement = container.querySelector('#task-updated-at');
+                if (updatedAtElement) {
+                    updatedAtElement.textContent = formatDate(task.updated_at);
+                }
 
-            // Update completed datetime if changed
-            const completedAtWrapper = document.getElementById('task-completed-at-wrapper');
-            if (task.completed_datetime) {
-                document.getElementById('task-completed-at').textContent = formatDate(task.completed_datetime);
-                completedAtWrapper.classList.remove('hidden');
-            } else {
-                completedAtWrapper.classList.add('hidden');
+                // Update completed datetime if changed
+                const completedAtWrapper = container.querySelector('#task-completed-at-wrapper');
+                const completedAtElement = container.querySelector('#task-completed-at');
+                if (completedAtWrapper && completedAtElement) {
+                    if (task.completed_datetime) {
+                        completedAtElement.textContent = formatDate(task.completed_datetime);
+                        completedAtWrapper.classList.remove('hidden');
+                    } else {
+                        completedAtWrapper.classList.add('hidden');
+                    }
+                }
             }
 
             // Update the task in the list
@@ -239,8 +342,12 @@ async function deleteTask(taskId) {
         });
 
         if (response.data.success) {
-            // Close the slide-over
-            window.slideOver.close('task-detail-modal');
+            // Close based on mode
+            if (isMobile()) {
+                window.slideOver.close('task-detail-modal-mobile');
+            } else {
+                closeDesktopPanel();
+            }
 
             // Remove the task from the list
             const taskItem = document.querySelector(`div[data-task-id="${taskId}"]`);
@@ -264,91 +371,124 @@ async function deleteTask(taskId) {
 }
 
 /**
- * Initialize slide-over functionality
+ * Initialize event listeners for a specific container
  */
-function initTaskSlideOver() {
+function initContainerEventListeners(container) {
+    if (!container) return;
+
     // Title input - auto-save with debounce
-    const titleInput = document.getElementById('task-title');
-    if (titleInput) {
+    const titleInput = container.querySelector('#task-title');
+    if (titleInput && !titleInput.dataset.initialized) {
         titleInput.addEventListener('input', debounce(function () {
             if (!currentTaskId) return;
 
             const title = this.value.trim();
+            const activeContainer = getActiveContainer();
+            if (!activeContainer) return;
 
             // Validation
-            const errorElement = document.getElementById('task-title-error');
+            const errorElement = activeContainer.querySelector('#task-title-error');
             if (!title) {
-                errorElement.textContent = '제목을 입력해주세요.';
-                errorElement.classList.remove('hidden');
+                if (errorElement) {
+                    errorElement.textContent = '제목을 입력해주세요.';
+                    errorElement.classList.remove('hidden');
+                }
                 return;
             }
 
             if (title.length > 255) {
-                errorElement.textContent = '제목은 255자를 초과할 수 없습니다.';
-                errorElement.classList.remove('hidden');
+                if (errorElement) {
+                    errorElement.textContent = '제목은 255자를 초과할 수 없습니다.';
+                    errorElement.classList.remove('hidden');
+                }
                 return;
             }
 
-            errorElement.classList.add('hidden');
+            if (errorElement) {
+                errorElement.classList.add('hidden');
+            }
 
             // Save
             saveTaskData(currentTaskId, { title });
         }, 500));
+        titleInput.dataset.initialized = 'true';
     }
 
     // Description textarea - auto-save with debounce
-    const descriptionTextarea = document.getElementById('task-description');
-    if (descriptionTextarea) {
+    const descriptionTextarea = container.querySelector('#task-description');
+    if (descriptionTextarea && !descriptionTextarea.dataset.initialized) {
         descriptionTextarea.addEventListener('input', debounce(function () {
             if (!currentTaskId) return;
 
             const description = this.value.trim();
             saveTaskData(currentTaskId, { description: description || null });
         }, 500));
+        descriptionTextarea.dataset.initialized = 'true';
     }
 
     // Completed checkbox - immediate save
-    const completedCheckbox = document.getElementById('task-completed');
-    if (completedCheckbox) {
+    const completedCheckbox = container.querySelector('#task-completed');
+    if (completedCheckbox && !completedCheckbox.dataset.initialized) {
         completedCheckbox.addEventListener('change', function () {
             if (!currentTaskId) return;
 
-            // Send the opposite of current state since we want to toggle
             const completed = this.checked;
-
-            // Use CompleteTask or UncompleteTask endpoint
-            // For now, we'll just send completed state
             saveTaskData(currentTaskId, { completed });
         });
+        completedCheckbox.dataset.initialized = 'true';
     }
 
     // Delete button
-    const deleteButton = document.getElementById('delete-task-btn');
-    if (deleteButton) {
+    const deleteButton = container.querySelector('#delete-task-btn');
+    if (deleteButton && !deleteButton.dataset.initialized) {
         deleteButton.addEventListener('click', function () {
             if (currentTaskId) {
                 deleteTask(currentTaskId);
             }
         });
+        deleteButton.dataset.initialized = 'true';
     }
 }
 
 /**
- * Open task detail slide-over
+ * Initialize slide-over functionality
+ */
+function initTaskSlideOver() {
+    // Initialize desktop panel event listeners
+    const desktopContainer = document.querySelector('#right-panel-content');
+    if (desktopContainer) {
+        initContainerEventListeners(desktopContainer);
+
+        // Desktop panel close button
+        const desktopCloseBtn = document.getElementById('desktop-panel-close');
+        if (desktopCloseBtn) {
+            desktopCloseBtn.addEventListener('click', closeDesktopPanel);
+        }
+    }
+
+    // Initialize mobile modal event listeners
+    const mobileContainer = document.querySelector('#task-detail-modal-mobile');
+    if (mobileContainer) {
+        initContainerEventListeners(mobileContainer);
+    }
+}
+
+/**
+ * Open task detail (responsive: desktop panel or mobile modal)
  */
 window.openTaskDetail = function (taskId) {
     currentTaskId = taskId;
 
-    // Reset form
-    document.getElementById('task-title').value = '';
-    document.getElementById('task-description').value = '';
-    document.getElementById('task-completed').checked = false;
-    document.getElementById('task-title-error').classList.add('hidden');
+    // Determine mode and open accordingly
+    if (isMobile()) {
+        // Mobile: Open full overlay modal
+        window.slideOver.open('task-detail-modal-mobile');
+    } else {
+        // Desktop: Open right panel
+        openDesktopPanel();
+    }
 
-    // Open slide-over
-    window.slideOver.open('task-detail-modal');
-
-    // Load task data
+    // Load task data (will use the active container)
     loadTaskData(taskId);
 };
 
