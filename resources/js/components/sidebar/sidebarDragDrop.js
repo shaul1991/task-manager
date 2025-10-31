@@ -17,9 +17,7 @@ function initTaskGroupDragDrop() {
 
     Sortable.create(taskGroupContainer, {
         animation: 150,
-        delay: 1000, // 1초 이상 누르고 있어야 드래그 시작
-        delayOnTouchOnly: false, // 모든 디바이스에서 delay 적용
-        handle: '.task-group-header',
+        handle: '.drag-handle', // 드래그 핸들만 클릭하여 드래그 가능 (delay 없음)
         ghostClass: 'sortable-ghost',
         dragClass: 'sortable-drag',
         filter: '.task-group-content', // 내부 콘텐츠는 드래그 불가
@@ -68,8 +66,7 @@ function initTaskListDragDropInGroups() {
         Sortable.create(content, {
             group: 'task-lists', // 같은 그룹끼리 이동 가능
             animation: 150,
-            delay: 1000, // 1초 이상 누르고 있어야 드래그 시작
-            delayOnTouchOnly: false, // 모든 디바이스에서 delay 적용
+            handle: '.drag-handle', // 드래그 핸들만 클릭하여 드래그 가능 (delay 없음)
             ghostClass: 'sortable-ghost',
             dragClass: 'sortable-drag',
             onEnd: async function(evt) {
@@ -153,8 +150,7 @@ function initUngroupedTaskListDragDrop() {
     Sortable.create(ungroupedContainer, {
         group: 'task-lists', // TaskGroup의 TaskList와 같은 그룹
         animation: 150,
-        delay: 1000, // 1초 이상 누르고 있어야 드래그 시작
-        delayOnTouchOnly: false, // 모든 디바이스에서 delay 적용
+        handle: '.drag-handle', // 드래그 핸들만 클릭하여 드래그 가능 (delay 없음)
         ghostClass: 'sortable-ghost',
         dragClass: 'sortable-drag',
         onEnd: async function(evt) {

@@ -11,25 +11,75 @@
 }
 
 /* Drag & Drop Styles */
-.sortable-ghost {
-    opacity: 0.4;
-    background: #f3f4f6;
-}
 
-.sortable-drag {
-    opacity: 1;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    cursor: grabbing !important;
-}
-
-.task-group-header:hover,
-[data-tasklist-id]:hover {
+/* 드래그 핸들 기본 스타일 */
+.drag-handle {
+    opacity: 0.3;
+    transition: opacity 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    color: #9ca3af; /* gray-400 */
     cursor: grab;
 }
 
-.task-group-header:active,
-[data-tasklist-id]:active {
+/* hover 시 드래그 핸들 강조 */
+.drag-handle:hover {
+    opacity: 1;
+    color: #6b7280; /* gray-500 */
+    transform: scale(1.1);
+}
+
+/* 드래그 핸들 active 시 커서 변경 */
+.drag-handle:active {
     cursor: grabbing;
+    color: #3b82f6; /* blue-500 */
+}
+
+/* 부모 hover 시에도 드래그 핸들 표시 */
+.task-group-header:hover .drag-handle,
+[data-tasklist-id]:hover .drag-handle {
+    opacity: 0.6;
+}
+
+/* 드래그 중인 항목 (Ghost) */
+.sortable-ghost {
+    opacity: 0.4 !important;
+    background: #f3f4f6 !important;
+}
+
+/* 드래그되는 실제 항목 */
+.sortable-drag {
+    opacity: 1 !important;
+    background: #ffffff !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 2px #3b82f6 !important;
+    cursor: grabbing !important;
+    transform: rotate(2deg) scale(1.02) !important;
+    transition: transform 0.2s ease !important;
+    border-radius: 0.5rem !important;
+}
+
+/* 드롭 가능 영역 하이라이트 */
+.sortable-drag-over {
+    background: #eff6ff !important; /* blue-50 */
+    border: 2px dashed #3b82f6 !important; /* blue-500 */
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+/* 드롭 가능 영역 (TaskGroup 내부) */
+[data-task-group-content].sortable-drag-over {
+    background: #eff6ff !important;
+    border-left: 2px dashed #3b82f6 !important;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 640px) {
+    .drag-handle {
+        opacity: 1; /* 모바일에서는 항상 표시 */
+        font-size: 1.25rem; /* 터치 영역 확대 */
+    }
+
+    .sortable-drag {
+        transform: rotate(1deg) scale(1.05) !important;
+    }
 }
 
 /* TaskGroup Accordion Slide Animation */

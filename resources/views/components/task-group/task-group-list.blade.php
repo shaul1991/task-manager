@@ -16,7 +16,20 @@
                         data-tasklist-id="{{ $taskList->id }}"
                     >
                         <div class="flex items-center gap-3">
-                            <x-icons.task_list class="h-4 w-4 {{ request()->route('task_list') == $taskList->id ? 'text-blue-600' : 'text-gray-500' }}" />
+                            <!-- Drag Handle Icon -->
+                            <svg
+                                class="drag-handle h-4 w-4 flex-shrink-0"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                aria-label="드래그 핸들"
+                                role="button"
+                                tabindex="0"
+                            >
+                                <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z" />
+                            </svg>
+
+                            <x-icons.task_list class="h-4 w-4 flex-shrink-0 {{ request()->route('task_list') == $taskList->id ? 'text-blue-600' : 'text-gray-500' }}" />
                             <span class="text-sm font-medium">{{ $taskList->name }}</span>
                         </div>
                         <span class="text-xs text-gray-500">{{ $taskList->incompleteTaskCount ?? 0 }}</span>

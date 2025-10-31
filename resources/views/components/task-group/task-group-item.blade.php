@@ -9,9 +9,22 @@
         aria-expanded="{{ $isExpanded ? 'true' : 'false' }}"
     >
         <div class="flex items-center gap-3">
+            <!-- Drag Handle Icon -->
+            <svg
+                class="drag-handle h-4 w-4 flex-shrink-0"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-label="드래그 핸들"
+                role="button"
+                tabindex="0"
+            >
+                <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z" />
+            </svg>
+
             <!-- Expand/Collapse Icon -->
             <svg
-                class="task-group-chevron h-4 w-4 transition-transform {{ $isExpanded ? 'rotate-90' : '' }}"
+                class="task-group-chevron h-4 w-4 flex-shrink-0 transition-transform {{ $isExpanded ? 'rotate-90' : '' }}"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
@@ -20,7 +33,7 @@
             </svg>
 
             <!-- TaskGroup Icon -->
-            <x-icons.task_group class="h-4 w-4 {{ $isActive ? 'text-blue-600' : 'text-gray-500' }}" />
+            <x-icons.task_group class="h-4 w-4 flex-shrink-0 {{ $isActive ? 'text-blue-600' : 'text-gray-500' }}" />
 
             <!-- TaskGroup Name -->
             <span class="text-sm font-semibold">{{ $taskGroup->name }}</span>
