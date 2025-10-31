@@ -26,7 +26,7 @@ final readonly class UpdateTaskDTO
     {
         return new self(
             title: $data['title'] ?? null,
-            description: $data['description'] ?? null,
+            description: $data['description'] ?? '',
             taskListId: $data['task_list_id'] ?? null,
             completed: isset($data['completed']) ? (bool) $data['completed'] : null,
         );

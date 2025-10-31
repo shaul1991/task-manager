@@ -7,15 +7,6 @@
             title="할 일 목록"
             subtitle="총 {{ $total }}개의 할 일"
         >
-            <x-slot:actions>
-                <a href="{{ route('tasks.create') }}">
-                    <x-ui.button variant="primary">
-                        <x-icons.plus class="w-5 h-5 mr-2"/>
-                        할 일 추가
-                    </x-ui.button>
-                </a>
-            </x-slot:actions>
-
             <x-slot:content>
                 <!-- Success Message -->
                 @if(session('success'))
@@ -67,8 +58,6 @@
                                         <p class="task-description mt-1 text-sm text-gray-600">
                                             {{ Str::limit($task->description, 100) }}
                                         </p>
-                                    @else
-                                        <p class="task-description mt-1 text-sm text-gray-400 italic">설명 없음</p>
                                     @endif
                                 </div>
                             </div>

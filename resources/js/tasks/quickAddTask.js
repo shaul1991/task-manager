@@ -99,9 +99,7 @@ function addTaskToList(task) {
                         <p class="task-description mt-1 text-sm text-gray-600">
                             ${escapeHtml(task.description)}
                         </p>
-                    ` : `
-                        <p class="task-description mt-1 text-sm text-gray-400 italic">설명 없음</p>
-                    `}
+                    ` : ''}
                 </div>
             </div>
         </div>
@@ -179,6 +177,25 @@ function initQuickAddTask() {
         }, 150);
     });
 }
+
+/**
+ * Focus on Quick Add input (called from header button)
+ */
+window.focusQuickAddInput = function() {
+    const input = document.getElementById('quick-add-task-input');
+    if (input) {
+        // Scroll to bottom (where quick add is)
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+        });
+
+        // Focus after scroll animation
+        setTimeout(() => {
+            input.focus();
+        }, 300);
+    }
+};
 
 /**
  * Initialize when DOM is ready

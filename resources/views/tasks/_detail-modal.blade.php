@@ -98,16 +98,5 @@
                 할 일 삭제
             </button>
         </div>
-
-        {{-- Link to full edit page --}}
-        <div class="border-t border-gray-200 pt-4">
-            <a
-                id="full-edit-link"
-                href="#"
-                class="block text-center text-sm text-blue-600 hover:text-blue-700 hover:underline"
-            >
-                전체 페이지에서 수정하기 →
-            </a>
-        </div>
     </div>
 </div>

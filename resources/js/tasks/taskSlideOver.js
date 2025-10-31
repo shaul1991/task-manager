@@ -54,7 +54,7 @@ function openDesktopPanel() {
 
     // Add click listener to main content (with delay to prevent immediate close)
     setTimeout(() => {
-        mainContentClickHandler = function(e) {
+        mainContentClickHandler = function (e) {
             // Only close if clicking directly on main content or its children
             // Don't close if clicking on task items (to allow opening different tasks)
             const clickedElement = e.target;
@@ -65,7 +65,7 @@ function openDesktopPanel() {
             }
         };
 
-        mainContent.addEventListener('click', mainContentClickHandler, { capture: true });
+        mainContent.addEventListener('click', mainContentClickHandler, {capture: true});
     }, 100);
 }
 
@@ -90,7 +90,7 @@ function closeDesktopPanel() {
 
     // Remove click listener from main content
     if (mainContentClickHandler) {
-        mainContent.removeEventListener('click', mainContentClickHandler, { capture: true });
+        mainContent.removeEventListener('click', mainContentClickHandler, {capture: true});
         mainContentClickHandler = null;
     }
 
@@ -216,12 +216,6 @@ async function loadTaskData(taskId) {
                 completedAtWrapper.classList.add('hidden');
             }
 
-            // Update full edit link
-            const fullEditLink = container.querySelector('#full-edit-link');
-            if (fullEditLink) {
-                fullEditLink.href = `/tasks/${taskId}/edit`;
-            }
-
             // Hide loading, show content
             taskLoading.classList.add('hidden');
             taskContent.classList.remove('hidden');
@@ -319,15 +313,27 @@ function updateTaskInList(task) {
 
     // Update description
     const descriptionElement = taskItem.querySelector('.task-description');
-    if (descriptionElement) {
-        if (task.description) {
+
+    if (task.description) {
+        // Description이 있으면 요소 생성 또는 업데이트
+        if (descriptionElement) {
             descriptionElement.textContent = task.description;
             descriptionElement.classList.remove('text-gray-400', 'italic');
             descriptionElement.classList.add('text-gray-600');
         } else {
-            descriptionElement.textContent = '설명 없음';
-            descriptionElement.classList.add('text-gray-400', 'italic');
-            descriptionElement.classList.remove('text-gray-600');
+            // 요소가 없으면 새로 생성
+            const titleElement = taskItem.querySelector('.task-title');
+            if (titleElement && titleElement.parentElement) {
+                const newDesc = document.createElement('p');
+                newDesc.className = 'task-description mt-1 text-sm text-gray-600';
+                newDesc.textContent = task.description;
+                titleElement.parentElement.appendChild(newDesc);
+            }
+        }
+    } else {
+        // Description이 없으면 요소 제거
+        if (descriptionElement) {
+            descriptionElement.remove();
         }
     }
 
@@ -391,6 +397,7 @@ function initContainerEventListeners(container) {
     // Title input - auto-save with debounce
     const titleInput = container.querySelector('#task-title');
     if (titleInput && !titleInput.dataset.initialized) {
+        // Input event with debounce (typing auto-save)
         titleInput.addEventListener('input', debounce(function () {
             if (!currentTaskId) return;
 
@@ -421,20 +428,71 @@ function initContainerEventListeners(container) {
             }
 
             // Save
-            saveTaskData(currentTaskId, { title });
+            saveTaskData(currentTaskId, {title});
         }, 500));
+
+        // Change event - immediate save when value changed
+        titleInput.addEventListener('change', function () {
+            // Cancel pending debounced save
+            clearTimeout(saveTimeout);
+
+            if (!currentTaskId) return;
+
+            const title = this.value.trim();
+            const activeContainer = getActiveContainer();
+            if (!activeContainer) return;
+
+            // Validation
+            const errorElement = activeContainer.querySelector('#task-title-error');
+            if (!title) {
+                if (errorElement) {
+                    errorElement.textContent = '제목을 입력해주세요.';
+                    errorElement.classList.remove('hidden');
+                }
+                return;
+            }
+
+            if (title.length > 255) {
+                if (errorElement) {
+                    errorElement.textContent = '제목은 255자를 초과할 수 없습니다.';
+                    errorElement.classList.remove('hidden');
+                }
+                return;
+            }
+
+            if (errorElement) {
+                errorElement.classList.add('hidden');
+            }
+
+            // Save immediately
+            saveTaskData(currentTaskId, {title});
+        });
+
         titleInput.dataset.initialized = 'true';
     }
 
     // Description textarea - auto-save with debounce
     const descriptionTextarea = container.querySelector('#task-description');
     if (descriptionTextarea && !descriptionTextarea.dataset.initialized) {
+        // Input event with debounce (typing auto-save)
         descriptionTextarea.addEventListener('input', debounce(function () {
             if (!currentTaskId) return;
 
             const description = this.value.trim();
-            saveTaskData(currentTaskId, { description: description || null });
+            saveTaskData(currentTaskId, {description: description || null});
         }, 500));
+
+        // Change event - immediate save when value changed
+        descriptionTextarea.addEventListener('change', function () {
+            // Cancel pending debounced save
+            clearTimeout(saveTimeout);
+
+            if (!currentTaskId) return;
+
+            const description = this.value.trim();
+            saveTaskData(currentTaskId, {description: description || null});
+        });
+
         descriptionTextarea.dataset.initialized = 'true';
     }
 
@@ -445,7 +503,7 @@ function initContainerEventListeners(container) {
             if (!currentTaskId) return;
 
             const completed = this.checked;
-            saveTaskData(currentTaskId, { completed });
+            saveTaskData(currentTaskId, {completed});
         });
         completedCheckbox.dataset.initialized = 'true';
     }

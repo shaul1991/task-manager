@@ -43,10 +43,11 @@ class TaskController extends Controller
 
     /**
      * Show the form for creating a new task.
+     * Redirects to index page (Quick Add UI 사용)
      */
-    public function create(): View
+    public function create(): RedirectResponse
     {
-        return view('tasks.create');
+        return redirect()->route('tasks.index');
     }
 
     /**
@@ -130,15 +131,14 @@ class TaskController extends Controller
 
     /**
      * Show the form for editing the specified task.
+     * Redirects to index page (Right Side Panel 사용)
      */
-    public function edit(int $id): View
+    public function edit(int $id): RedirectResponse
     {
         try {
-            $taskDto = $this->getTask->execute($id);
+            $this->getTask->execute($id);
 
-            return view('tasks.edit', [
-                'task' => $taskDto,
-            ]);
+            return redirect()->route('tasks.index');
         } catch (NotFoundException $e) {
             abort(404, '할 일을 찾을 수 없습니다.');
         }
