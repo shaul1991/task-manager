@@ -53,53 +53,26 @@
 
             <!-- TaskList Items (Scrollable) -->
             <div id="tasklist-items-container" class="space-y-1 overflow-y-auto" style="max-height: calc(100vh - 20rem);">
-                <!-- TaskList Item Example 1 -->
-                <a
-                    href="#"
-                    class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
-                >
-                    <div class="flex items-center gap-3">
-                        <div class="h-3 w-3 rounded-full bg-blue-500"></div>
-                        <span class="text-sm font-medium">업무</span>
-                    </div>
-                    <span class="text-xs text-gray-500">5</span>
-                </a>
-
-                <!-- TaskList Item Example 2 -->
-                <a
-                    href="#"
-                    class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
-                >
-                    <div class="flex items-center gap-3">
-                        <div class="h-3 w-3 rounded-full bg-green-500"></div>
-                        <span class="text-sm font-medium">쇼핑</span>
-                    </div>
-                    <span class="text-xs text-gray-500">3</span>
-                </a>
-
-                <!-- TaskList Item Example 3 -->
-                <a
-                    href="#"
-                    class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
-                >
-                    <div class="flex items-center gap-3">
-                        <div class="h-3 w-3 rounded-full bg-purple-500"></div>
-                        <span class="text-sm font-medium">운동 루틴</span>
-                    </div>
-                    <span class="text-xs text-gray-500">7</span>
-                </a>
-
-                <!-- TaskList Item Example 4 -->
-                <a
-                    href="#"
-                    class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
-                >
-                    <div class="flex items-center gap-3">
-                        <div class="h-3 w-3 rounded-full bg-yellow-500"></div>
-                        <span class="text-sm font-medium">독서 목록</span>
-                    </div>
-                    <span class="text-xs text-gray-500">12</span>
-                </a>
+                @forelse($taskLists ?? [] as $taskList)
+                    @php
+                        // ID 기반 색상 할당 (일관성 유지)
+                        $colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-red-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
+                        $colorClass = $colors[$taskList->id % count($colors)];
+                    @endphp
+                    <a
+                        href="#"
+                        class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
+                        data-tasklist-id="{{ $taskList->id }}"
+                    >
+                        <div class="flex items-center gap-3">
+                            <div class="h-3 w-3 rounded-full {{ $colorClass }}"></div>
+                            <span class="text-sm font-medium">{{ $taskList->name }}</span>
+                        </div>
+                        <span class="text-xs text-gray-500">0</span>
+                    </a>
+                @empty
+                    <!-- 목록이 없을 때는 아무것도 표시하지 않음 -->
+                @endforelse
             </div>
         </div>
 

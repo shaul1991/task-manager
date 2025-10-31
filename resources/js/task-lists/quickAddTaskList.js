@@ -13,9 +13,9 @@ function escapeHtml(text) {
 }
 
 /**
- * Generate a random color for the task list
+ * Get color for the task list based on ID (consistent with server-side logic)
  */
-function getRandomColor() {
+function getColorForTaskList(taskListId) {
     const colors = [
         'bg-blue-500',
         'bg-green-500',
@@ -26,7 +26,7 @@ function getRandomColor() {
         'bg-indigo-500',
         'bg-teal-500',
     ];
-    return colors[Math.floor(Math.random() * colors.length)];
+    return colors[taskListId % colors.length];
 }
 
 /**
@@ -74,8 +74,8 @@ function addTaskListToSidebar(taskList) {
         return;
     }
 
-    // Generate random color for the new task list
-    const colorClass = getRandomColor();
+    // Get color for the new task list (consistent with server-side logic)
+    const colorClass = getColorForTaskList(taskList.id);
 
     // Create task list item HTML
     const taskListItemHtml = `
