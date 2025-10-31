@@ -60,7 +60,7 @@
                         data-tasklist-id="{{ $taskList->id }}"
                     >
                         <div class="flex items-center gap-3">
-                            <x-icons.list class="h-4 w-4 text-gray-500" />
+                            <x-icons.task_list class="h-4 w-4 text-gray-500" />
                             <span class="text-sm font-medium">{{ $taskList->name }}</span>
                         </div>
                         <span class="text-xs text-gray-500">0</span>
