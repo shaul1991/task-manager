@@ -17,7 +17,7 @@
 --}}
 
 <div id="confirm-modal"
-     class="modal fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50"
+     class="modal fixed inset-0 z-[60] hidden items-center justify-center bg-black bg-opacity-50"
      role="dialog"
      aria-labelledby="confirm-modal-title"
      aria-modal="true"

@@ -7,6 +7,11 @@
 
     <title>{{ $title ?? 'Task Manager' }}</title>
 
+    <script
+            src="https://js.sentry-cdn.com/85c7acb9e8fb6cc41c599e95b9bb5fda.min.js"
+            crossorigin="anonymous"
+    ></script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/layout.js', 'resources/js/task-lists/quickAddTaskList.js'])
 </head>
 <body class="antialiased bg-gray-50">
@@ -55,6 +60,9 @@
 
         <!-- Toast Notification Container -->
         <x-ui.toast />
+
+        <!-- Confirm Modal (전역 - 최상위 레벨) -->
+        <x-ui.confirm-modal />
     </div>
 
     <!-- Page-specific Scripts -->

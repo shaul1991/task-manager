@@ -179,6 +179,3 @@
 
 {{-- Dropdown Menu (전역 - sidebar 밖에 위치) --}}
 <x-ui.dropdown-menu />
-
-{{-- Confirm Modal (전역 - sidebar 밖에 위치) --}}
-<x-ui.confirm-modal />
