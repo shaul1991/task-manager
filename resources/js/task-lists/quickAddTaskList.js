@@ -13,20 +13,14 @@ function escapeHtml(text) {
 }
 
 /**
- * Get color for the task list based on ID (consistent with server-side logic)
+ * Get TaskList icon SVG
  */
-function getColorForTaskList(taskListId) {
-    const colors = [
-        'bg-blue-500',
-        'bg-green-500',
-        'bg-purple-500',
-        'bg-yellow-500',
-        'bg-red-500',
-        'bg-pink-500',
-        'bg-indigo-500',
-        'bg-teal-500',
-    ];
-    return colors[taskListId % colors.length];
+function getTaskListIconSvg() {
+    return `
+        <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+    `;
 }
 
 /**
@@ -74,9 +68,6 @@ function addTaskListToSidebar(taskList) {
         return;
     }
 
-    // Get color for the new task list (consistent with server-side logic)
-    const colorClass = getColorForTaskList(taskList.id);
-
     // Create task list item HTML
     const taskListItemHtml = `
         <a
@@ -85,7 +76,7 @@ function addTaskListToSidebar(taskList) {
             data-tasklist-id="${taskList.id}"
         >
             <div class="flex items-center gap-3">
-                <div class="h-3 w-3 rounded-full ${colorClass}"></div>
+                ${getTaskListIconSvg()}
                 <span class="text-sm font-medium">${escapeHtml(taskList.name)}</span>
             </div>
             <span class="text-xs text-gray-500">0</span>

@@ -54,18 +54,13 @@
             <!-- TaskList Items (Scrollable) -->
             <div id="tasklist-items-container" class="space-y-1 overflow-y-auto" style="max-height: calc(100vh - 20rem);">
                 @forelse($taskLists ?? [] as $taskList)
-                    @php
-                        // ID 기반 색상 할당 (일관성 유지)
-                        $colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-red-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
-                        $colorClass = $colors[$taskList->id % count($colors)];
-                    @endphp
                     <a
                         href="#"
                         class="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
                         data-tasklist-id="{{ $taskList->id }}"
                     >
                         <div class="flex items-center gap-3">
-                            <div class="h-3 w-3 rounded-full {{ $colorClass }}"></div>
+                            <x-icons.list class="h-4 w-4 text-gray-500" />
                             <span class="text-sm font-medium">{{ $taskList->name }}</span>
                         </div>
                         <span class="text-xs text-gray-500">0</span>
