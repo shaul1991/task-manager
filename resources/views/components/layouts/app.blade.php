@@ -52,6 +52,9 @@
 
         <!-- Mobile Overlay -->
         <x-layout.overlay />
+
+        <!-- Toast Notification Container -->
+        <x-ui.toast />
     </div>
 
     <!-- Page-specific Scripts -->

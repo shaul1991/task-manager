@@ -114,50 +114,41 @@ function formatDate(dateString) {
     return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}`;
 }
 
+// Global reference to current saving toast
+let currentSavingToast = null;
+
 /**
- * Show save status
+ * Show save status using toast notifications
  */
 function showSaveStatus(status) {
-    const container = getActiveContainer();
-    if (!container) return;
-
-    const saveStatus = container.querySelector('#save-status');
-    const saveSpinner = container.querySelector('#save-spinner');
-    const saveCheck = container.querySelector('#save-check');
-    const saveText = container.querySelector('#save-text');
-
-    if (!saveStatus || !saveSpinner || !saveCheck || !saveText) return;
-
     if (status === 'saving') {
         isSaving = true;
-        saveStatus.classList.remove('hidden');
-        saveSpinner.classList.remove('hidden');
-        saveCheck.classList.add('hidden');
-        saveText.textContent = '저장 중...';
+        // Show saving toast (no auto-dismiss)
+        if (window.toast) {
+            currentSavingToast = window.toast.saving('저장 중...');
+        }
     } else if (status === 'saved') {
         isSaving = false;
-        saveSpinner.classList.add('hidden');
-        saveCheck.classList.remove('hidden');
-        saveText.textContent = '저장됨';
-
-        // Hide after 2 seconds
-        setTimeout(() => {
-            saveStatus.classList.add('hidden');
-        }, 2000);
+        // Hide saving toast if exists
+        if (currentSavingToast && window.toast) {
+            window.toast.hide(currentSavingToast);
+            currentSavingToast = null;
+        }
+        // Show success toast
+        if (window.toast) {
+            window.toast.success('저장되었습니다', 2000);
+        }
     } else if (status === 'error') {
         isSaving = false;
-        saveSpinner.classList.add('hidden');
-        saveCheck.classList.add('hidden');
-        saveText.textContent = '저장 실패';
-        saveStatus.classList.remove('bg-gray-50');
-        saveStatus.classList.add('bg-red-50');
-
-        // Revert to gray background after 3 seconds
-        setTimeout(() => {
-            saveStatus.classList.add('hidden');
-            saveStatus.classList.remove('bg-red-50');
-            saveStatus.classList.add('bg-gray-50');
-        }, 3000);
+        // Hide saving toast if exists
+        if (currentSavingToast && window.toast) {
+            window.toast.hide(currentSavingToast);
+            currentSavingToast = null;
+        }
+        // Show error toast
+        if (window.toast) {
+            window.toast.error('저장에 실패했습니다', 3000);
+        }
     }
 }
 
@@ -393,7 +384,9 @@ async function deleteTask(taskId) {
             }
 
             // 성공 메시지
-            alert('할 일이 삭제되었습니다.');
+            if (window.toast) {
+                window.toast.success('할 일이 삭제되었습니다.', 2000);
+            }
 
             // 할 일이 없으면 페이지 새로고침
             const remainingTasks = document.querySelectorAll('div[data-task-id]');
@@ -403,7 +396,9 @@ async function deleteTask(taskId) {
         }
     } catch (error) {
         console.error('Failed to delete task:', error);
-        alert('할 일 삭제 중 오류가 발생했습니다.');
+        if (window.toast) {
+            window.toast.error('할 일 삭제 중 오류가 발생했습니다.', 3000);
+        }
     }
 }
 

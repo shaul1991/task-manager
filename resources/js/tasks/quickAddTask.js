@@ -58,10 +58,12 @@ async function quickAddTask(title, taskListId = null) {
         console.error('Failed to create task:', error);
 
         // Show error message
-        if (error.response?.data?.message) {
-            alert('할 일 생성 실패: ' + error.response.data.message);
-        } else {
-            alert('할 일 생성 중 오류가 발생했습니다.');
+        if (window.toast) {
+            if (error.response?.data?.message) {
+                window.toast.error('할 일 생성 실패: ' + error.response.data.message, 3000);
+            } else {
+                window.toast.error('할 일 생성 중 오류가 발생했습니다.', 3000);
+            }
         }
 
         return null;
@@ -131,6 +133,12 @@ function initQuickAddTask() {
     const input = document.getElementById('quick-add-task-input');
 
     if (!form || !input) return;
+
+    // Prevent duplicate initialization
+    if (form.dataset.quickAddInitialized === 'true') {
+        return;
+    }
+    form.dataset.quickAddInitialized = 'true';
 
     // Handle form submission
     form.addEventListener('submit', async function(e) {
